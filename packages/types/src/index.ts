@@ -20,3 +20,33 @@ export const LoginSchema = z.object({
 });
 
 export type LoginRequest = z.infer<typeof LoginSchema>;
+
+export const ProductCategory = z.enum([
+  'Vegetables',
+  'Fruits',
+  'Crafts',
+  'Clothing',
+  'Electronics',
+  'Services',
+  'Other'
+]);
+
+export const ProductSchema = z.object({
+  id: z.string().optional(),
+  vendorId: z.string(),
+  name: z.string().min(1, "Product name is required"),
+  description: z.string().optional(),
+  price: z.number().min(0),
+  isNegotiable: z.boolean().default(false),
+  category: ProductCategory,
+  imageUrl: z.string().url().optional().or(z.literal('')),
+  status: z.enum(['available', 'out_of_stock']).default('available'),
+});
+
+export type Product = z.infer<typeof ProductSchema>;
+
+export const GenerateDescriptionSchema = z.object({
+  imageBase64: z.string().min(1, "Image is required"),
+  category: z.string().optional(),
+});
+
