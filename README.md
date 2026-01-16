@@ -40,6 +40,37 @@ Test (placeholder):
 npm test --workspaces --if-present
 ```
 
-## CI
+## Running the Application
 
-Basic CI is configured in `.github/workflows/ci.yml` to install, build, and test all workspaces.
+### 1. Install Dependencies
+Run this from the root directory:
+```bash
+npm install --workspaces
+```
+
+### 2. Start Backend
+Open a terminal and run:
+```bash
+npm start --workspace=@marketverse/backend
+```
+*Runs on http://localhost:3000*
+
+### 3. Start Frontend
+Open another terminal and run:
+```bash
+npm run dev --workspace=@marketverse/frontend
+```
+*Runs on http://localhost:5173*
+
+## Features Implemented
+
+### Vendor Onboarding & Profile
+- **Login / Register**: Enter a phone number. If new, you are redirected to Onboarding.
+- **Onboarding**: Select a market location to create your profile.
+- **Profile Management**: Update your store name, description, operating hours, and contact info (WhatsApp/Phone).
+
+### Tech Stack Configured
+- **Frontend**: Vite + React + Tailwind + Zustand + React Hook Form + Zod
+- **Backend**: Express + In-Memory Database + Zod
+- **Shared**: Common TypeScript types in `@marketverse/types`
+
