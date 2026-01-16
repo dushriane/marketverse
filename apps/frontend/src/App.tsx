@@ -7,6 +7,7 @@ import { ProductForm } from './pages/ProductForm';
 import { Orders } from './pages/Orders';
 import { Messages } from './pages/Messages';
 import { Analytics } from './pages/Analytics';
+import { MarketExplore } from './pages/MarketExplore';
 import { useAuthStore } from './stores/authStore';
 import { Link, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
@@ -65,6 +66,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/explore" element={<MarketExplore />} />
         <Route path="/onboarding" element={<Onboarding />} />
         
         <Route path="/profile" element={<PrivateRoute><Layout><Profile /></Layout></PrivateRoute>} />

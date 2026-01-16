@@ -275,6 +275,25 @@ app.get('/api/ai/trends', async (req, res) => {
     res.json({ trends });
 });
 
+// 18. Market Exploration - Public Data
+app.get('/api/market/vendors', (req, res) => {
+  // Return public vendor info only
+  const publicVendors = vendors.map(v => {
+      const vendorProducts = products.filter(p => p.vendorId === v.id);
+      const categories = [...new Set(vendorProducts.map(p => p.category))];
+      return {
+          id: v.id,
+          storeName: v.storeName || 'Unnamed Stall',
+          description: v.description,
+          marketLocation: v.marketLocation,
+          profileImage: v.profileImage,
+          categories,
+          productCount: vendorProducts.length
+      };
+  });
+  res.json(publicVendors);
+});
+
 app.listen(port, () => {
   console.log(`Backend running at http://localhost:${port}`);
 });
