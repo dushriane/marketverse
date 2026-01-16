@@ -1,0 +1,9 @@
+{
+  "name": "@marketverse/backend",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Node.js backend service",
+  "scripts": {},
+  "dependencies": {},
+  "devDependencies": {}
+}
