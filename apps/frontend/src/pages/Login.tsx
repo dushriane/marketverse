@@ -16,6 +16,36 @@ export function Login() {
 
   const onSubmit = async (data: LoginRequest) => {
     try {
+      // MOCK DATA IMPLEMENTATION
+      console.log("Attempting login with mock data...", data);
+      
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      // Mock user not found scenario (use phone number '0000000000' to test)
+      if (data.phoneNumber === '0000000000') {
+        navigate('/onboarding', { state: { phoneNumber: data.phoneNumber } });
+        return;
+      }
+
+      // Mock successful login
+      const mockVendor = {
+        id: 'mock-vendor-123',
+        phoneNumber: data.phoneNumber,
+        storeName: 'Mock Market Stall',
+        marketLocation: 'Central Market, Row 4',
+        description: 'Fresh vegetables and local crafts. This is a mock store data.',
+        operatingHours: '8:00 AM - 6:00 PM',
+        contactPhone: data.phoneNumber,
+        contactWhatsapp: data.phoneNumber
+      };
+
+      // Set auth state
+      setVendor(mockVendor);
+      navigate('/profile');
+
+      /* 
+      // Original Backend Call (Commented out for mock mode)
       const res = await api.post('/auth/login', data);
       if (res.data.exists) {
         setVendor(res.data.vendor);
@@ -24,7 +54,9 @@ export function Login() {
         // Redirect to onboarding with phone number pre-filled state
         navigate('/onboarding', { state: { phoneNumber: data.phoneNumber } });
       }
+      */
     } catch (err) {
+      console.error(err);
       setError('Login failed. Ensure backend is running.');
     }
   };
