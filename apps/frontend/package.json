@@ -3,7 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "description": "React frontend app",
-  "scripts": {},
+  "scripts": {
+    "start": "echo \"Frontend running...\" && tail -f /dev/null"
+  },
   "dependencies": {},
   "devDependencies": {}
 }

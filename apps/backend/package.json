@@ -3,7 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "description": "Node.js backend service",
-  "scripts": {},
+  "scripts": {
+    "start": "node src/index.js"
+  },
   "dependencies": {},
   "devDependencies": {}
 }
