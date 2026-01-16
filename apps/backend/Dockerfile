@@ -13,6 +13,12 @@ COPY apps/backend ./apps/backend
 # Install dependencies
 RUN npm install
 
+# Build shared packages
+RUN npm run build -w packages/types
+
+# Build backend
+RUN npm run build -w apps/backend
+
 # Switch to backend directory
 WORKDIR /app/apps/backend
 

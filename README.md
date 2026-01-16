@@ -60,7 +60,7 @@ Open another terminal and run:
 ```bash
 npm run dev --workspace=@marketverse/frontend
 ```
-*Runs on http://localhost:5173*
+*Runs on http://localhost:5175*
 
 ## Features Implemented
 

@@ -12,10 +12,13 @@ COPY apps/frontend ./apps/frontend
 # Install dependencies
 RUN npm install
 
+# Build shared types (frontend needs them for type checking, though Vite can transpile without them built if configured, but safe to build)
+RUN npm run build -w packages/types
+
 # Switch to frontend directory
 WORKDIR /app/apps/frontend
 
-EXPOSE 5173 3000
+EXPOSE 5175
 
-# Placeholder command until a real bundler (Vite/Webpack) is set up
-CMD ["npm", "start"]
+# Run Vite in dev mode with host exposed
+CMD ["npm", "run", "dev", "--", "--host"]
