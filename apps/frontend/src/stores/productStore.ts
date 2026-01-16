@@ -12,7 +12,7 @@ interface ProductState {
   bulkUpdateStatus: (vendorId: string, status: 'available' | 'out_of_stock') => Promise<void>;
 }
 
-export const useProductStore = create<ProductState>((set, get) => ({
+export const useProductStore = create<ProductState>((set) => ({
   products: [],
   isLoading: false,
 
@@ -51,7 +51,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
     }
   },
 
-  deleteProduct: async (id, vendorId) => {
+  deleteProduct: async (id) => {
     try {
       await api.delete(`/products/${id}`);
       // Refresh list or Optimistic update

@@ -1,7 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
-import { VendorSchema, LoginSchema, ProductSchema, Vendor, Product, GenerateDescriptionSchema } from '@marketverse/types';
+import { 
+  VendorSchema, LoginSchema, ProductSchema, 
+  Vendor, Product, GenerateDescriptionSchema,
+  ReservationSchema, Reservation,
+  MessageSchema, Message
+} from '@marketverse/types';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -15,6 +20,8 @@ app.use(express.json({ limit: '10mb' })); // Increased limit for base64 images
 // --- Mock Database (In-Memory) ---
 const vendors: Vendor[] = [];
 const products: Product[] = [];
+const reservations: Reservation[] = [];
+const messages: Message[] = [];
 
 // --- Routes ---
 
@@ -171,6 +178,74 @@ app.post('/api/ai/generate-description', (req, res) => {
   }, 1000); 
 });
 
+
+// 12. Create Reservation (Customer Side Simulation)
+app.post('/api/reservations', (req, res) => {
+  const result = ReservationSchema.safeParse(req.body);
+  if (!result.success) return res.status(400).json({ error: result.error });
+
+  const newReservation = { 
+    ...result.data, 
+    id: Date.now().toString(),
+    createdAt: new Date().toISOString()
+  };
+  reservations.push(newReservation);
+  res.status(201).json(newReservation);
+});
+
+// 13. Get Vendor Reservations
+app.get('/api/vendors/:vendorId/reservations', (req, res) => {
+  const list = reservations
+    .filter(r => r.vendorId === req.params.vendorId)
+    .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  res.json(list);
+});
+
+// 14. Update Reservation Status
+app.put('/api/reservations/:id/status', (req, res) => {
+  const { status } = req.body;
+  const index = reservations.findIndex(r => r.id === req.params.id);
+  if (index === -1) return res.status(404).json({ error: "Reservation not found" });
+
+  reservations[index].status = status;
+  res.json(reservations[index]);
+});
+
+// 15. Create Message (Customer Side Simulation)
+app.post('/api/messages', (req, res) => {
+  const result = MessageSchema.safeParse(req.body);
+  if (!result.success) return res.status(400).json({ error: result.error });
+
+  const newMessage = { 
+    ...result.data, 
+    id: Date.now().toString(),
+    createdAt: new Date().toISOString()
+  };
+  messages.push(newMessage);
+  res.status(201).json(newMessage);
+});
+
+// 16. Get Vendor Messages
+app.get('/api/vendors/:vendorId/messages', (req, res) => {
+  const list = messages
+    .filter(m => m.vendorId === req.params.vendorId)
+    .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  res.json(list);
+});
+
+// 17. Analytics: Most Viewed Products
+// Mocking data here by sorting products (assuming `viewCount` exists or randomizing for demo)
+app.get('/api/vendors/:vendorId/analytics', (req, res) => {
+  const vendorProducts = products.filter(p => p.vendorId === req.params.vendorId);
+  const data = vendorProducts
+    .map(p => ({
+      name: p.name,
+      views: Math.floor(Math.random() * 100) + 10 // Mock views for demo since we haven't tracked them yet
+    }))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 5); // Top 5
+  res.json(data);
+});
 
 app.listen(port, () => {
   console.log(`Backend running at http://localhost:${port}`);

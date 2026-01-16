@@ -4,12 +4,32 @@ import { Onboarding } from './pages/Onboarding';
 import { Profile } from './pages/Profile';
 import { ProductList } from './pages/ProductList';
 import { ProductForm } from './pages/ProductForm';
+import { Orders } from './pages/Orders';
+import { Messages } from './pages/Messages';
+import { Analytics } from './pages/Analytics';
 import { useAuthStore } from './stores/authStore';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import clsx from 'clsx';
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const vendor = useAuthStore(state => state.vendor);
   return vendor ? children : <Navigate to="/" />;
+}
+
+function NavLink({ to, children }: { to: string, children: React.ReactNode }) {
+  const location = useLocation();
+  const isActive = location.pathname.startsWith(to);
+  return (
+    <Link 
+      to={to} 
+      className={clsx(
+        isActive ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+        "inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+      )}
+    >
+      {children}
+    </Link>
+  );
 }
 
 function Layout({ children }: { children: React.ReactNode }) {
@@ -23,12 +43,11 @@ function Layout({ children }: { children: React.ReactNode }) {
                 MarketVerse
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link to="/products" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                  Products
-                </Link>
-                <Link to="/profile" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                  Profile
-                </Link>
+                <NavLink to="/products">Products</NavLink>
+                <NavLink to="/orders">Orders</NavLink>
+                <NavLink to="/messages">Messages</NavLink>
+                <NavLink to="/analytics">Analytics</NavLink>
+                <NavLink to="/profile">Profile</NavLink>
               </div>
             </div>
           </div>
@@ -48,42 +67,20 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/onboarding" element={<Onboarding />} />
         
-        <Route 
-          path="/profile" 
-          element={
-            <PrivateRoute>
-              <Layout><Profile /></Layout>
-            </PrivateRoute>
-          } 
-        />
-        <Route 
-          path="/products" 
-          element={
-            <PrivateRoute>
-              <Layout><ProductList /></Layout>
-            </PrivateRoute>
-          } 
-        />
-        <Route 
-          path="/products/new" 
-          element={
-            <PrivateRoute>
-              <Layout><ProductForm /></Layout>
-            </PrivateRoute>
-          } 
-        />
-        <Route 
-          path="/products/:id/edit" 
-          element={
-            <PrivateRoute>
-              <Layout><ProductForm /></Layout>
-            </PrivateRoute>
-          } 
-        />
+        <Route path="/profile" element={<PrivateRoute><Layout><Profile /></Layout></PrivateRoute>} />
+        
+        <Route path="/products" element={<PrivateRoute><Layout><ProductList /></Layout></PrivateRoute>} />
+        <Route path="/products/new" element={<PrivateRoute><Layout><ProductForm /></Layout></PrivateRoute>} />
+        <Route path="/products/:id/edit" element={<PrivateRoute><Layout><ProductForm /></Layout></PrivateRoute>} />
+        
+        <Route path="/orders" element={<PrivateRoute><Layout><Orders /></Layout></PrivateRoute>} />
+        <Route path="/messages" element={<PrivateRoute><Layout><Messages /></Layout></PrivateRoute>} />
+        <Route path="/analytics" element={<PrivateRoute><Layout><Analytics /></Layout></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
   );
 }
+
 
 
 export default App;

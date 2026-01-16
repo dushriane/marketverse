@@ -41,6 +41,7 @@ export const ProductSchema = z.object({
   category: ProductCategory,
   imageUrl: z.string().url().optional().or(z.literal('')),
   status: z.enum(['available', 'out_of_stock']).default('available'),
+  viewCount: z.number().default(0),
 });
 
 export type Product = z.infer<typeof ProductSchema>;
@@ -49,4 +50,30 @@ export const GenerateDescriptionSchema = z.object({
   imageBase64: z.string().min(1, "Image is required"),
   category: z.string().optional(),
 });
+
+export const ReservationSchema = z.object({
+  id: z.string().optional(),
+  vendorId: z.string(),
+  productId: z.string(),
+  productName: z.string(), // Denormalized for display convenience
+  customerName: z.string(),
+  customerPhone: z.string(),
+  status: z.enum(['pending', 'fulfilled', 'cancelled']).default('pending'),
+  createdAt: z.string().optional(), // ISO String
+});
+
+export type Reservation = z.infer<typeof ReservationSchema>;
+
+export const MessageSchema = z.object({
+  id: z.string().optional(),
+  vendorId: z.string(),
+  customerName: z.string(),
+  customerPhone: z.string().optional(),
+  content: z.string(),
+  isRead: z.boolean().default(false),
+  createdAt: z.string().optional(),
+});
+
+export type Message = z.infer<typeof MessageSchema>;
+
 
