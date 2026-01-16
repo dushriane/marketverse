@@ -7,6 +7,7 @@ import {
   ReservationSchema, Reservation,
   MessageSchema, Message
 } from '@marketverse/types';
+import { aiService } from './ai';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -245,6 +246,33 @@ app.get('/api/vendors/:vendorId/analytics', (req, res) => {
     .sort((a, b) => b.views - a.views)
     .slice(0, 5); // Top 5
   res.json(data);
+});
+
+// --- AI Features ---
+
+app.post('/api/ai/description', async (req, res) => {
+  const { storeName, keywords } = req.body;
+  const description = await aiService.generateDescription(storeName, keywords);
+  res.json({ description });
+});
+
+app.post('/api/ai/categories', async (req, res) => {
+  const { name, description } = req.body;
+  const categories = await aiService.suggestCategories(name, description);
+  res.json({ categories });
+});
+
+app.post('/api/ai/summary', async (req, res) => {
+    const { vendorId } = req.body;
+    const vendorProducts = products.filter(p => p.vendorId === vendorId);
+    const summary = await aiService.generateDailySummary(vendorProducts);
+    res.json({ summary });
+});
+
+app.get('/api/ai/trends', async (req, res) => {
+    const { category } = req.query;
+    const trends = await aiService.getTrendingProducts(String(category));
+    res.json({ trends });
 });
 
 app.listen(port, () => {

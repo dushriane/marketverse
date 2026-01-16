@@ -5,6 +5,7 @@ import { ProductSchema, Product, ProductCategory } from '@marketverse/types';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useProductStore } from '../stores/productStore';
+import { useAIStore } from '../stores/aiStore';
 import { api } from '../lib/api';
 
 const categories = Object.values(ProductCategory.enum);
@@ -14,6 +15,7 @@ export function ProductForm() {
   const navigate = useNavigate();
   const vendor = useAuthStore(state => state.vendor);
   const { products, createProduct, updateProduct } = useProductStore();
+  const { suggestedCategories, suggestCategories, isGenerating: isAiGenerating } = useAIStore();
   
   const isEdit = Boolean(id);
   const existingProduct = products.find(p => p.id === id);
@@ -80,6 +82,13 @@ export function ProductForm() {
     } finally {
       setGenerating(false);
     }
+  };
+
+  const handleSuggestCategory = async () => {
+    const name = watch('name');
+    const desc = watch('description') || '';
+    if (!name) return alert('Enter a product name first');
+    await suggestCategories(name, desc);
   };
 
   const onSubmit = async (data: Product) => {
@@ -156,15 +165,39 @@ export function ProductForm() {
         {/* Category */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Category</label>
-          <select
-            {...register('category')}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-          >
-            <option value="">Select a category</option>
-            {categories.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+          <div className="flex gap-2">
+            <select
+              {...register('category')}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+            >
+              <option value="">Select a category</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <button
+                type="button"
+                onClick={handleSuggestCategory}
+                disabled={isAiGenerating}
+                className="mt-1 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+            >
+                {isAiGenerating ? '...' : '🤖 Suggest'}
+            </button>
+          </div>
+          {suggestedCategories.length > 0 && (
+              <div className="mt-2 text-xs text-gray-500">
+                  Did you mean: {suggestedCategories.map(c => (
+                      <button 
+                        key={c} 
+                        type="button"
+                        onClick={() => setValue('category', c as any)}
+                        className="text-indigo-600 hover:text-indigo-800 underline ml-1"
+                      >
+                         {c}
+                      </button>
+                  ))}?
+              </div>
+          )}
           {errors.category && <p className="text-red-500 text-sm">{errors.category.message}</p>}
         </div>
 

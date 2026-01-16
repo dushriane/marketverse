@@ -4,10 +4,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { VendorSchema, Vendor } from '@marketverse/types';
 import { api } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
+import { useAIStore } from '../stores/aiStore';
 
 export function Profile() {
   const { vendor, setVendor, logout } = useAuthStore();
-  const { register, handleSubmit, reset, formState: { isDirty, errors } } = useForm<Vendor>({
+  const { 
+    isGenerating, generatedDescription, generatedSummary, 
+    generateDescription, generateSummary, clearAIState 
+  } = useAIStore();
+  
+  const { register, handleSubmit, reset, setValue, watch, formState: { isDirty, errors } } = useForm<Vendor>({
     resolver: zodResolver(VendorSchema),
     defaultValues: vendor || {}
   });
@@ -15,6 +21,17 @@ export function Profile() {
   useEffect(() => {
     if (vendor) reset(vendor);
   }, [vendor, reset]);
+
+  useEffect(() => {
+    if (generatedDescription) {
+        setValue('description', generatedDescription, { shouldDirty: true });
+    }
+  }, [generatedDescription, setValue]);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => clearAIState();
+  }, [clearAIState]);
 
   const onSubmit = async (data: Vendor) => {
     if (!vendor?.id) return;
@@ -63,9 +80,19 @@ export function Profile() {
                   />
                 </div>
 
-                {/* Description */}
+              {/* Description with AI Assistant */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-sm font-medium text-gray-700">Description</label>
+                    <button
+                        type="button" 
+                        onClick={() => generateDescription(watch('storeName') || '', 'fresh, local, quality')}
+                        disabled={isGenerating}
+                        className="text-xs text-indigo-600 hover:text-indigo-500 disabled:opacity-50"
+                    >
+                        ✨ {isGenerating ? 'Writer thinking...' : 'AI: Write Description'}
+                    </button>
+                  </div>
                   <div className="mt-1">
                     <textarea
                       {...register('description')}
@@ -75,6 +102,44 @@ export function Profile() {
                     />
                   </div>
                 </div>
+
+                 {/* Daily Summary Generator */}
+                 <div className="bg-indigo-50 p-4 rounded-md border border-indigo-100">
+                    <h4 className="text-sm font-medium text-indigo-900 mb-2">📢 AI Daily Update Generator</h4>
+                    <p className="text-xs text-indigo-700 mb-3">
+                        Create a quick summary of your new arrivals for customers.
+                    </p>
+                    {generatedSummary ? (
+                        <div className="bg-white p-3 rounded border border-indigo-200 mb-3">
+                            <p className="text-sm text-gray-800 whitespace-pre-wrap">{generatedSummary}</p>
+                            <div className="mt-2 flex space-x-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {navigator.clipboard.writeText(generatedSummary); alert('Copied!')}}
+                                    className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200"
+                                >
+                                    Copy to Clipboard
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => clearAIState()}
+                                    className="text-xs text-gray-500 px-2 py-1 rounded hover:bg-gray-100"
+                                >
+                                    Dismiss
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => vendor?.id && generateSummary(vendor.id)}
+                            disabled={isGenerating}
+                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                            {isGenerating ? 'Creating Summary...' : 'Generate "What\'s New" Post'}
+                        </button>
+                    )}
+                 </div>
 
                 {/* Profile Image URL (simplified) */}
                 <div className="col-span-6 sm:col-span-3">
