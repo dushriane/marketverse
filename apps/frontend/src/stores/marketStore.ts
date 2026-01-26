@@ -21,12 +21,15 @@ interface MarketState {
   searchQuery: string;
   selectedCategory: string | 'All';
   selectedVendorId: string | null;
+  isInsideStall: boolean;
 
   fetchMarketData: () => Promise<void>;
   setSearchQuery: (query: string) => void;
   setCategory: (category: string) => void;
   setViewMode: (mode: '3D' | '2D') => void;
   selectVendor: (id: string | null) => void;
+  enterStall: () => void;
+  exitStall: () => void;
   applyFilters: () => void;
 }
 
@@ -38,6 +41,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   searchQuery: '',
   selectedCategory: 'All',
   selectedVendorId: null,
+  isInsideStall: false,
 
   fetchMarketData: async () => {
     set({ isLoading: true });
@@ -62,6 +66,8 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
   setViewMode: (mode) => set({ viewMode: mode }),
   selectVendor: (id) => set({ selectedVendorId: id }),
+  enterStall: () => set({ isInsideStall: true }),
+  exitStall: () => set({ isInsideStall: false }),
 
   // internal helper, not exposed in interface but used by setters
   applyFilters: () => {

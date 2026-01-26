@@ -2,11 +2,12 @@ import { Canvas } from '@react-three/fiber';
 import { Sky, Stars, Environment, Grid } from '@react-three/drei';
 import { useMarketStore } from '../../stores/marketStore';
 import { Stall3D } from './Stall3D';
+import { InteractiveStall } from './InteractiveStall';
 import { PlayerControls } from './PlayerControls';
 import { Suspense, useMemo } from 'react';
 
 export function Market3D() {
-  const { filteredVendors, selectedVendorId, selectVendor } = useMarketStore();
+  const { filteredVendors, selectedVendorId, selectVendor, isInsideStall, exitStall } = useMarketStore();
 
   // Create a grid layout for stalls
   const gridLayout = useMemo(() => {
@@ -22,6 +23,28 @@ export function Market3D() {
       return { ...vendor, position: [x, 0, z] as [number, number, number] };
     });
   }, [filteredVendors]);
+
+  if (isInsideStall) {
+      return (
+        <div className="w-full h-full bg-gray-900 absolute top-0 left-0">
+             <Canvas shadows camera={{ position: [0, 1.7, 5], fov: 60 }}>
+                <Suspense fallback={null}>
+                    <InteractiveStall />
+                    <Environment preset="city" />
+                </Suspense>
+             </Canvas>
+              {/* Stall HUD */}
+              <div className="absolute top-4 left-4 z-10">
+                  <button 
+                    onClick={exitStall}
+                    className="bg-white/10 backdrop-blur text-white px-4 py-2 rounded-full hover:bg-white/20 flex items-center gap-2 transition-all"
+                  >
+                      <span>← Back to Market</span>
+                  </button>
+              </div>
+        </div>
+      );
+  }
 
   return (
     <div className="w-full h-full bg-gray-900 absolute top-0 left-0">
