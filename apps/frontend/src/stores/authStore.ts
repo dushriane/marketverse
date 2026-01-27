@@ -1,22 +1,32 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Vendor } from '@marketverse/types';
+
+export interface UserProfile {
+  userId: string;
+  email: string;
+  fullName: string;
+  role: 'BUYER' | 'VENDOR' | 'ADMIN';
+  token: string;
+}
 
 interface AuthState {
-  vendor: Vendor | null;
-  setVendor: (vendor: Vendor) => void;
+  user: UserProfile | null;
+  isAuthenticated: boolean;
+  login: (user: UserProfile) => void;
   logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      vendor: null,
-      setVendor: (vendor) => set({ vendor }),
-      logout: () => set({ vendor: null }),
+      user: null,
+      isAuthenticated: false,
+      login: (user) => set({ user, isAuthenticated: true }),
+      logout: () => set({ user: null, isAuthenticated: false }),
     }),
     {
       name: 'marketverse-auth',
     }
   )
 );
+

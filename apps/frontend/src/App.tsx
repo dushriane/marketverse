@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
+import { Register } from './pages/Register';
 import { Onboarding } from './pages/Onboarding';
 import { Profile } from './pages/Profile';
 import { ProductList } from './pages/ProductList';
@@ -13,8 +14,8 @@ import { Link, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
-  const vendor = useAuthStore(state => state.vendor);
-  return vendor ? children : <Navigate to="/" />;
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  return isAuthenticated ? children : <Navigate to="/login" />;
 }
 
 function NavLink({ to, children }: { to: string, children: React.ReactNode }) {
@@ -65,7 +66,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<Navigate to="/explore" />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/explore" element={<MarketExplore />} />
         <Route path="/onboarding" element={<Onboarding />} />
         

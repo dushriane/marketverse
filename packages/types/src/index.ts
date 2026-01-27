@@ -16,10 +16,21 @@ export const VendorSchema = z.object({
 export type Vendor = z.infer<typeof VendorSchema>;
 
 export const LoginSchema = z.object({
-  phoneNumber: z.string().min(10),
+  identifier: z.string().min(1, "Email or Phone is required"), // Replaces phoneNumber
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export type LoginRequest = z.infer<typeof LoginSchema>;
+
+export const RegisterSchema = z.object({
+  fullName: z.string().min(2, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.enum(['BUYER', 'VENDOR']),
+});
+
+export type RegisterRequest = z.infer<typeof RegisterSchema>;
+
 
 export const ProductCategory = z.enum([
   'Vegetables',

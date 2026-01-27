@@ -4,50 +4,112 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { LoginSchema, LoginRequest } from '@marketverse/types';
 import { api } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export function Login() {
   const { register, handleSubmit, formState: { errors } } = useForm<LoginRequest>({
     resolver: zodResolver(LoginSchema)
   });
   const [error, setError] = useState('');
-  const setVendor = useAuthStore(state => state.setVendor);
+  const [isLoading, setIsLoading] = useState(false);
+  const login = useAuthStore(state => state.login);
   const navigate = useNavigate();
 
   const onSubmit = async (data: LoginRequest) => {
+    setIsLoading(true);
+    setError('');
     try {
-      // MOCK DATA IMPLEMENTATION
-      console.log("Attempting login with mock data...", data);
+      const res = await api.post('/auth/login', data);
       
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Update global auth store
+      // Response expects: { token, user: { userId, email, role, fullName } }
+      const { token, user } = res.data;
+      
+      login({
+          ...user,
+          token
+      });
 
-      // Mock user not found scenario (use phone number '0000000000' to test)
-      if (data.phoneNumber === '0000000000') {
-        navigate('/onboarding', { state: { phoneNumber: data.phoneNumber } });
-        return;
+      // Redirect based on role
+      if (user.role === 'VENDOR') {
+        navigate('/profile'); // Vendor Dashboard
+      } else if (user.role === 'ADMIN') {
+        navigate('/admin'); // Admin Dashboard (Needs implementation)
+      } else {
+        navigate('/explore'); // Buyer goes to market
       }
 
-      // Mock successful login
-      const mockVendor = {
-        id: 'mock-vendor-123',
-        phoneNumber: data.phoneNumber,
-        storeName: 'Mock Market Stall',
-        marketLocation: 'Central Market, Row 4',
-        description: 'Fresh vegetables and local crafts. This is a mock store data.',
-        operatingHours: '8:00 AM - 6:00 PM',
-        contactPhone: data.phoneNumber,
-        contactWhatsapp: data.phoneNumber
-      };
+    } catch (err: any) {
+        console.error("Login failed", err);
+        setError(err.response?.data?.error || 'Invalid credentials');
+    } finally {
+        setIsLoading(false);
+    }
+  };
 
-      // Set auth state
-      setVendor(mockVendor);
-      navigate('/profile');
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white p-8 shadow rounded-xl">
+        <div className="text-center">
+          <h2 className="text-3xl font-extrabold text-gray-900">
+            Welcome Back
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Sign in to your account
+          </p>
+        </div>
 
-      /* 
-      // Original Backend Call (Commented out for mock mode)
-      const res = await api.post('/auth/login', data);
-      if (res.data.exists) {
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4">
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email or Phone</label>
+              <input
+                {...register('identifier')}
+                type="text"
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Name or Email"
+              />
+              {errors.identifier && <p className="text-red-500 text-xs mt-1">{errors.identifier.message}</p>}
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <input
+                {...register('password')}
+                type="password"
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="••••••••"
+              />
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+            </div>
+
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            >
+              {isLoading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </div>
+
+          <div className="text-center mt-4">
+             <Link to="/register" className="text-indigo-600 hover:text-indigo-500 text-sm">Create an account</Link>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
         setVendor(res.data.vendor);
         navigate('/profile');
       } else {
