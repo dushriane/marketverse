@@ -6,6 +6,7 @@ import { api } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
 import { useAIStore } from '../stores/aiStore';
 import { Link } from 'react-router-dom';
+import { TopBuyersSidebar } from '../components/vendor/TopBuyersSidebar';
 
 // Extended type for Stall form inputs since it's not strictly in VendorSchema
 type StallSettings = {
@@ -147,9 +148,11 @@ export function Profile() {
             </nav>
         </div>
 
-        <div className="p-6">
-            {activeTab === 'profile' ? (
-                <form onSubmit={handleSubmit(onProfileSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+            {/* Main Form Area */}
+            <div className="md:col-span-2">
+                {activeTab === 'profile' ? (
+                    <form onSubmit={handleSubmit(onProfileSubmit)} className="space-y-6">
                     <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                         
                         {/* Profile Image */}
@@ -230,6 +233,12 @@ export function Profile() {
                     )}
                 </form>
             )}
+            </div>
+
+            {/* Sidebar */}
+            <div className="md:col-span-1">
+                <TopBuyersSidebar />
+            </div>
         </div>
       </div>
     </div>
