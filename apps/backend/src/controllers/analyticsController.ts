@@ -31,7 +31,26 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
                 }
             });
             
-            stats = { products, sales, stalls: stalls.length };
+            stats = { 
+                products, 
+                sales, 
+                stalls: stalls.length,
+                // Mock trends for visualization
+                salesTrend: [
+                    { name: 'Mon', sales: Math.floor(sales * 0.1) },
+                    { name: 'Tue', sales: Math.floor(sales * 0.15) },
+                    { name: 'Wed', sales: Math.floor(sales * 0.2) },
+                    { name: 'Thu', sales: Math.floor(sales * 0.25) },
+                    { name: 'Fri', sales: Math.floor(sales * 0.3) },
+                ],
+                productViews: [
+                     // Mock product views
+                    { name: 'Apples', views: 120 },
+                    { name: 'Bananas', views: 98 },
+                    { name: 'Cherries', views: 86 },
+                    { name: 'Dates', views: 54 },
+                ]
+            };
         } else if (role === 'ADMIN') {
             const users = await prisma.user.count();
             const vendors = await prisma.vendorProfile.count();

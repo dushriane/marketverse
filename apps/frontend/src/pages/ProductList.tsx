@@ -73,7 +73,7 @@ export function ProductList() {
                     <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
                     <p className="text-sm text-gray-500 capitalize">{product.category}</p>
                   </div>
-                  <p className="text-lg font-bold text-gray-900">${product.price}</p>
+                  <p className="text-lg font-bold text-gray-900">RWF {product.price.toLocaleString()}</p>
                 </div>
                 <p className="mt-2 text-sm text-gray-600 line-clamp-2">{product.description}</p>
                 

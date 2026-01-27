@@ -1,26 +1,63 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { VendorSchema, Vendor } from '@marketverse/types';
 import { api } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
 import { useAIStore } from '../stores/aiStore';
+import { Link } from 'react-router-dom';
+import { TopBuyersSidebar } from '../components/vendor/TopBuyersSidebar';
+
+// Extended type for Stall form inputs since it's not strictly in VendorSchema
+type StallSettings = {
+    stallId?: string;
+    stallNumber: string;
+    floor: number;
+    locationDescription: string;
+}
 
 export function Profile() {
-  const { vendor, setVendor, logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
+  const [vendorProfile, setVendorProfile] = useState<any>(null);
+  const [stall, setStall] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'profile' | 'stall'>('profile');
+
   const { 
-    isGenerating, generatedDescription, generatedSummary, 
-    generateDescription, generateSummary, clearAIState 
+    isGenerating, generatedDescription, generateDescription, clearAIState
   } = useAIStore();
   
-  const { register, handleSubmit, reset, setValue, watch, formState: { isDirty, errors } } = useForm<Vendor>({
+  const { register, handleSubmit, reset, setValue, watch } = useForm<Vendor>({
     resolver: zodResolver(VendorSchema),
-    defaultValues: vendor || {}
   });
 
+  const { register: registerStall, handleSubmit: handleSubmitStall, setValue: setValueStall } = useForm<StallSettings>();
+
   useEffect(() => {
-    if (vendor) reset(vendor);
-  }, [vendor, reset]);
+    async function loadData() {
+        if (!user) return;
+        try {
+            const res = await api.get('/vendor/profile');
+            setVendorProfile(res.data);
+            reset(res.data); 
+
+            // Load Stalls
+            const stallRes = await api.get('/vendor/stalls');
+            if (stallRes.data && stallRes.data.length > 0) {
+                const myStall = stallRes.data[0]; 
+                setStall(myStall);
+                setValueStall('stallNumber', myStall.stallNumber);
+                setValueStall('floor', myStall.floor);
+                setValueStall('locationDescription', myStall.locationDescription);
+            }
+        } catch (e) {
+            console.error("Failed to load profile", e);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+    loadData();
+  }, [user, reset, setValueStall]);
 
   useEffect(() => {
     if (generatedDescription) {
@@ -28,174 +65,180 @@ export function Profile() {
     }
   }, [generatedDescription, setValue]);
 
-  // Clean up on unmount
   useEffect(() => {
     return () => clearAIState();
   }, [clearAIState]);
 
-  const onSubmit = async (data: Vendor) => {
-    if (!vendor?.id) return;
+  const onProfileSubmit = async (data: any) => {
     try {
-      const res = await api.put(`/vendors/${vendor.id}`, data);
-      setVendor(res.data);
-      alert('Profile updated!');
+      const formData = new FormData();
+      formData.append('storeName', data.storeName || '');
+      formData.append('description', data.description || '');
+      formData.append('phoneNumber', data.phoneNumber || '');
+      
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+          formData.append('profileImage', fileInput.files[0]);
+      }
+
+      const res = await api.put('/vendor/profile', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setVendorProfile(res.data);
+      alert("Profile Updated!");
     } catch (err) {
-      alert('Failed to update profile');
+      console.error(err);
+      alert("Update Failed");
     }
   };
 
-  if (!vendor) return <div>Please login first.</div>;
+  const onStallSubmit = async (data: StallSettings) => {
+      if (!stall) return;
+      try {
+          await api.put(`/vendor/stalls/${stall.id}`, data);
+          alert('Stall details updated!');
+      } catch (e) {
+          console.error(e);
+          alert('Failed to update stall');
+      }
+  }
+
+  const handleGenerateDescription = () => {
+    const name = watch('storeName');
+    if (!name) return;
+    generateDescription(name, "Quality, Trusted, Best Prices");
+  };
+
+  if (isLoading) return <div className="p-8 text-center">Loading Vendor Dashboard...</div>;
 
   return (
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <div className="md:grid md:grid-cols-3 md:gap-6">
-        <div className="md:col-span-1">
-          <div className="px-4 sm:px-0">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">Store Profile</h3>
-            <p className="mt-1 text-sm text-gray-600">
-              Customize how your stall looks to customers.
-              <br/>
-              <button 
-                onClick={logout}
-                className="mt-4 text-red-600 underline"
-              >
-                Logout
-              </button>
-            </p>
-          </div>
+      {/* Header */}
+      <div className="md:flex md:items-center md:justify-between mb-8">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+            Vendor Dashboard
+          </h2>
         </div>
-        
-        <div className="mt-5 md:mt-0 md:col-span-2">
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="shadow sm:rounded-md sm:overflow-hidden">
-              <div className="px-4 py-5 bg-white space-y-6 sm:p-6">
-                
-                {/* Stall Name */}
-                <div className="col-span-6 sm:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700">Stall Name</label>
-                  <input
-                    {...register('storeName')}
-                    type="text"
-                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 border"
-                  />
-                </div>
+        <div className="mt-4 flex md:mt-0 md:ml-4 items-center gap-4">
+            <Link to="/products" className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                Manage Products
+            </Link>
+             <button onClick={() => logout()} className="text-red-600 text-sm font-medium hover:text-red-800">
+                Logout
+            </button>
+        </div>
+      </div>
 
-              {/* Description with AI Assistant */}
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="block text-sm font-medium text-gray-700">Description</label>
-                    <button
-                        type="button" 
-                        onClick={() => generateDescription(watch('storeName') || '', 'fresh, local, quality')}
-                        disabled={isGenerating}
-                        className="text-xs text-indigo-600 hover:text-indigo-500 disabled:opacity-50"
-                    >
-                        ✨ {isGenerating ? 'Writer thinking...' : 'AI: Write Description'}
-                    </button>
-                  </div>
-                  <div className="mt-1">
-                    <textarea
-                      {...register('description')}
-                      rows={3}
-                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
-                      placeholder="Fresh fruits and vegetables directly from the farm..."
-                    />
-                  </div>
-                </div>
+      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex">
+                <button
+                    onClick={() => setActiveTab('profile')}
+                    className={`${activeTab === 'profile' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm`}
+                >
+                    Profile Settings
+                </button>
+                <button
+                    onClick={() => setActiveTab('stall')}
+                    className={`${activeTab === 'stall' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm`}
+                >
+                    Stall Location
+                </button>
+            </nav>
+        </div>
 
-                 {/* Daily Summary Generator */}
-                 <div className="bg-indigo-50 p-4 rounded-md border border-indigo-100">
-                    <h4 className="text-sm font-medium text-indigo-900 mb-2">📢 AI Daily Update Generator</h4>
-                    <p className="text-xs text-indigo-700 mb-3">
-                        Create a quick summary of your new arrivals for customers.
-                    </p>
-                    {generatedSummary ? (
-                        <div className="bg-white p-3 rounded border border-indigo-200 mb-3">
-                            <p className="text-sm text-gray-800 whitespace-pre-wrap">{generatedSummary}</p>
-                            <div className="mt-2 flex space-x-2">
-                                <button
-                                    type="button"
-                                    onClick={() => {navigator.clipboard.writeText(generatedSummary); alert('Copied!')}}
-                                    className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200"
-                                >
-                                    Copy to Clipboard
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => clearAIState()}
-                                    className="text-xs text-gray-500 px-2 py-1 rounded hover:bg-gray-100"
-                                >
-                                    Dismiss
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+            {/* Main Form Area */}
+            <div className="md:col-span-2">
+                {activeTab === 'profile' ? (
+                    <form onSubmit={handleSubmit(onProfileSubmit)} className="space-y-6">
+                    <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        
+                        {/* Profile Image */}
+                        <div className="sm:col-span-6">
+                            <label className="block text-sm font-medium text-gray-700">Store Logo / Image</label>
+                            <div className="mt-1 flex items-center">
+                                <span className="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100">
+                                    {vendorProfile?.profileImage ? (
+                                        <img src={`http://localhost:3000${vendorProfile.profileImage}`} alt="Profile" className="h-full w-full object-cover" />
+                                    ) : (
+                                        <svg className="h-full w-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                                        </svg>
+                                    )}
+                                </span>
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    className="ml-5 bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="sm:col-span-3">
+                            <label className="block text-sm font-medium text-gray-700">Store Name</label>
+                            <div className="mt-1">
+                                <input {...register('storeName')} type="text" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                            </div>
+                        </div>
+
+                        <div className="sm:col-span-6">
+                            <label className="block text-sm font-medium text-gray-700">Description</label>
+                            <div className="mt-1 flex gap-2">
+                                <textarea {...register('description')} rows={3} className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md" />
+                                <button type="button" onClick={handleGenerateDescription} disabled={isGenerating} className="inline-flex items-center px-3 py-2 border border-blue-300 shadow-sm text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg className={`-ml-0.5 mr-2 h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                    {isGenerating ? 'Gemini Thinking...' : 'Summarize Shop Identity'}
                                 </button>
                             </div>
                         </div>
-                    ) : (
-                        <button
-                            type="button"
-                            onClick={() => vendor?.id && generateSummary(vendor.id)}
-                            disabled={isGenerating}
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        >
-                            {isGenerating ? 'Creating Summary...' : 'Generate "What\'s New" Post'}
+                    </div>
+                    <div className="flex justify-end">
+                        <button type="submit" className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none">
+                            Save Profile
                         </button>
+                    </div>
+                </form>
+            ) : (
+                <form onSubmit={handleSubmitStall(onStallSubmit)} className="space-y-6">
+                    {!stall ? (
+                        <div className="text-gray-500">No stall assigned yet. Please contact Admin.</div>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <div className="sm:col-span-3">
+                                <label className="block text-sm font-medium text-gray-700">Stall Number / Identifier</label>
+                                <input {...registerStall('stallNumber')} type="text" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                            </div>
+
+                            <div className="sm:col-span-3">
+                                <label className="block text-sm font-medium text-gray-700">Floor</label>
+                                <input {...registerStall('floor')} type="number" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                            </div>
+
+                            <div className="sm:col-span-6">
+                                <label className="block text-sm font-medium text-gray-700">Location Description</label>
+                                <input {...registerStall('locationDescription')} type="text" placeholder="e.g. Near North Entrance, Block A" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" />
+                            </div>
+                        </div>
                     )}
-                 </div>
-
-                {/* Profile Image URL (simplified) */}
-                <div className="col-span-6 sm:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700">Profile Image URL</label>
-                  <input
-                    {...register('profileImage')}
-                    type="text"
-                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 border"
-                    placeholder="https://example.com/my-shop.jpg"
-                  />
-                  {errors.profileImage && <p className="text-red-500 text-sm">Invalid URL</p>}
-                </div>
-
-                {/* Operating Hours */}
-                <div className="col-span-6 sm:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700">Operating Hours</label>
-                  <input
-                    {...register('operatingHours')}
-                    type="text"
-                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 border"
-                    placeholder="Mon-Fri: 09:00 - 18:00"
-                  />
-                </div>
-
-                {/* Contact Info */}
-                <div className="grid grid-cols-6 gap-6">
-                  <div className="col-span-6 sm:col-span-3">
-                    <label className="block text-sm font-medium text-gray-700">Contact Phone</label>
-                    <input
-                      {...register('contactPhone')}
-                      type="text"
-                      className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 border"
-                    />
-                  </div>
-                  <div className="col-span-6 sm:col-span-3">
-                    <label className="block text-sm font-medium text-gray-700">WhatsApp</label>
-                    <input
-                      {...register('contactWhatsapp')}
-                      type="text"
-                      className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 border"
-                    />
-                  </div>
-                </div>
-
-              </div>
-              <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                <button
-                  type="submit"
-                  disabled={!isDirty}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none disabled:opacity-50"
-                >
-                  Save
-                </button>
-              </div>
+                    {stall && (
+                        <div className="flex justify-end">
+                            <button type="submit" className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none">
+                                Update Location
+                            </button>
+                        </div>
+                    )}
+                </form>
+            )}
             </div>
-          </form>
+
+            {/* Sidebar */}
+            <div className="md:col-span-1">
+                <TopBuyersSidebar />
+            </div>
         </div>
       </div>
     </div>

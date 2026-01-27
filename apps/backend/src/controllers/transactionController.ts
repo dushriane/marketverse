@@ -79,3 +79,61 @@ export const getMyOrders = async (req: Request, res: Response) => {
         res.status(500).json({ error: e.message });
     }
 };
+
+export const getVendorReservations = async (req: Request, res: Response) => {
+    const user = (req as AuthRequest).user;
+    try {
+        const profile = await prisma.vendorProfile.findUnique({ where: { userId: user!.userId } });
+        if (!profile) return res.status(403).json({ error: 'Not a vendor' });
+
+        const items = await prisma.transactionItem.findMany({
+            where: {
+                product: { stall: { vendorId: profile.id } }
+            },
+            include: {
+                product: true,
+                transaction: {
+                    include: { buyer: true }
+                }
+            },
+            orderBy: { transaction: { createdAt: 'desc' }}
+        });
+
+        const reservations = items.map(item => ({
+            id: item.transactionId, 
+            itemId: item.id,
+            customerName: item.transaction.buyer?.fullName || item.transaction.buyer?.email || 'Guest',
+            // Ensure this is properly typed and available
+            userId: item.transaction.buyerId, 
+            productName: item.product.name,
+            quantity: item.quantity,
+            total: item.priceAtTime * item.quantity,
+            price: item.priceAtTime,
+            status: item.transaction.status, 
+            createdAt: item.transaction.createdAt
+        }));
+
+        res.json(reservations);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+};
+
+export const updateOrderStatus = async (req: Request, res: Response) => {
+    // This updates the whole transaction or item? 
+    // To match frontend "Complete" button
+    const { id } = req.params;
+    const { status } = req.body;
+    try {
+        // Here we update the Transaction. 
+        // Note: This affects all items in the transaction. 
+        // In a multi-vendor cart, this is problematic, but acceptable for MVP/Mock.
+        const updated = await prisma.transaction.update({
+             where: { id },
+             data: { status }
+        });
+        res.json(updated);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+}

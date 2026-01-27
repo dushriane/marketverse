@@ -12,6 +12,8 @@ import adminRoutes from './routes/adminRoutes';
 import messageRoutes from './routes/messageRoutes';
 import { SocketService } from './services/socketService';
 import { prisma } from './config/prisma';
+import { upload } from './middleware/upload';
+import { aiService } from './ai';
 import path from 'path';
 
 dotenv.config();
@@ -23,7 +25,7 @@ const httpServer = createServer(app);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 const io = new Server(httpServer, {
   cors: {
-    origin: "*", // Adjust for production
+    origin: "*", 
     methods: ["GET", "POST"]
   }
 });
@@ -44,6 +46,39 @@ app.use('/api/orders', transactionRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/messages', messageRoutes);
+
+// --- Utility Routes (Uploads & AI) ---
+app.post('/api/upload', upload.single('image'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+    res.json({ url: `/uploads/${req.file.filename}` });
+});
+
+app.post('/api/ai/generate-description', async (req, res) => {
+    const { imageBase64, category, storeName, keywords, productName } = req.body;
+    
+    // Mode 1: Vendor Profile (Store Identity)
+    if (storeName) {
+        const desc = await aiService.generateDescription(storeName, keywords || 'quality, trusted, community');
+        return res.json({ description: desc });
+    }
+    
+    // Mode 2: Product Description
+    if (productName) {
+         // In a real scenario, we might pass the imageBase64 to a vision model (Gemini Pro Vision)
+         // For now, we generate text based on the name and category
+         const prompt = `${productName} ${category ? `(${category})` : ''} ${keywords ? keywords : ''}`;
+         const desc = await aiService.generateDescription(productName, keywords || 'high quality, great value');
+         return res.json({ description: desc });
+    }
+
+    res.json({ description: "Unable to generate description. Please provide a Store Name or Product Name." });
+});
+
+app.post('/api/ai/suggest-categories', async (req, res) => {
+    const { name, description } = req.body;
+    const categories = await aiService.suggestCategories(name, description);
+    res.json({ categories });
+});
 
 // --- Health Check ---
 app.get('/health', (req, res) => {

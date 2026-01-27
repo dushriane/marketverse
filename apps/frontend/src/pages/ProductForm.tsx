@@ -66,14 +66,18 @@ export function ProductForm() {
   };
 
   const generateDescription = async () => {
-    const imageUrl = watch('imageUrl');
+    // const imageUrl = watch('imageUrl'); // Image based not yet fully supported by backend logic for generation 
+    const productName = watch('name');
     const category = watch('category');
-    if (!imageUrl) return alert('Please upload an image first');
+    
+    // We allow generation if Name is present, even without Image
+    if (!productName) return alert('Please enter a Product Name first');
 
     setGenerating(true);
     try {
       const res = await api.post('/ai/generate-description', {
-        imageBase64: imageUrl, // In this mock, the URL is a data URI so it works directly
+        // imageBase64: imageUrl, 
+        productName,
         category
       });
       setValue('description', res.data.description);
@@ -145,10 +149,13 @@ export function ProductForm() {
           <button
             type="button"
             onClick={generateDescription}
-            disabled={generating || !watch('imageUrl')}
-            className="inline-flex items-center px-3 py-1.5 border border-indigo-600 text-xs font-medium rounded text-indigo-600 bg-white hover:bg-indigo-50 disabled:opacity-50"
+            disabled={generating || !watch('name')}
+            className="inline-flex items-center px-4 py-2 border border-purple-500 shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
           >
-            {generating ? 'Generating...' : '✨ AI Generate Description'}
+             <svg className={`-ml-1 mr-2 h-5 w-5 ${generating ? 'animate-spin' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+             </svg>
+            {generating ? 'Gemini Generating...' : 'Generate Description with AI'}
           </button>
         </div>
 
