@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/prisma';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-in-prod';
 
 // Use standard bcrypt in production, simple hash for demo consistency with seed
 const hashPassword = (password: string) => crypto.createHash('sha256').update(password).digest('hex');
@@ -38,8 +41,11 @@ export const register = async (req: Request, res: Response) => {
         });
     }
 
-    // In a real app, generate JWT token here
-    const token = "mock-jwt-token-" + newUser.id;
+    const token = jwt.sign(
+        { userId: newUser.id, email: newUser.email, role: newUser.role },
+        JWT_SECRET,
+        { expiresIn: '24h' }
+    );
 
     res.status(201).json({ 
         message: 'User created successfully',
@@ -67,8 +73,11 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // In a real app, generate JWT token here
-    const token = "mock-jwt-token-" + user.id;
+    const token = jwt.sign(
+        { userId: user.id, email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: '24h' }
+    );
 
     res.json({ 
         message: 'Login successful',

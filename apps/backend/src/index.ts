@@ -5,6 +5,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import marketRoutes from './routes/marketRoutes';
 import authRoutes from './routes/authRoutes';
+import productRoutes from './routes/productRoutes';
+import transactionRoutes from './routes/transactionRoutes';
 import { SocketService } from './services/socketService';
 import { prisma } from './config/prisma';
 
@@ -30,6 +32,8 @@ const socketService = new SocketService(io);
 // --- Routes ---
 app.use('/api/auth', authRoutes);
 app.use('/api/market', marketRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', transactionRoutes);
 
 // --- Health Check ---
 app.get('/health', (req, res) => {
