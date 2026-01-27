@@ -1,6 +1,17 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/prisma';
 
+export const getMarkets = async (req: Request, res: Response) => {
+  try {
+    const markets = await prisma.market.findMany({
+        include: { stalls: true }
+    });
+    res.json(markets);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch markets' });
+  }
+};
+
 export const getVendors = async (req: Request, res: Response) => {
   try {
     const vendors = await prisma.vendorProfile.findMany({

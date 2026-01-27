@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text, Html } from '@react-three/drei';
-import { MarketVendor } from '../../stores/marketStore';
+import { useMarketStore, MarketVendor } from '../../stores/marketStore';
 import * as THREE from 'three';
 
 interface Stall3DProps {

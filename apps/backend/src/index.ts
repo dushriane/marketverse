@@ -7,6 +7,7 @@ import marketRoutes from './routes/marketRoutes';
 import authRoutes from './routes/authRoutes';
 import productRoutes from './routes/productRoutes';
 import transactionRoutes from './routes/transactionRoutes';
+import vendorRoutes from './routes/vendorRoutes';
 import { SocketService } from './services/socketService';
 import { prisma } from './config/prisma';
 
@@ -34,6 +35,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', transactionRoutes);
+app.use('/api/vendor', vendorRoutes);
 
 // --- Health Check ---
 app.get('/health', (req, res) => {

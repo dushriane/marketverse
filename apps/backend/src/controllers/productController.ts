@@ -50,6 +50,36 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 };
 
+export const getProducts = async (req: Request, res: Response) => {
+    try {
+        const { stallId, category } = req.query;
+        const whereClause: any = {};
+        if (stallId) whereClause.stallId = stallId as string;
+        if (category) whereClause.category = category as string;
+
+        const products = await prisma.product.findMany({
+            where: whereClause
+        });
+        res.json(products);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+};
+
+export const getProductById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const product = await prisma.product.findUnique({
+            where: { id },
+            include: { stall: true }
+        });
+        if (!product) return res.status(404).json({ error: 'Product not found' });
+        res.json(product);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+};
+
 export const updateProduct = async (req: Request, res: Response) => {
     const { id } = req.params;
     const user = (req as AuthRequest).user;
