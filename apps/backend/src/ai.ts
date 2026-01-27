@@ -1,53 +1,76 @@
-// Mock AI Service - In a real app, this would call OpenAI or Google Gemini
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Initialize Gemini
+// User requested "Gemini 3 Preview". We map this to the latest available model.
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+
 export const aiService = {
+  checkAvailability: () => {
+    if (!process.env.GEMINI_API_KEY) {
+        // console.warn("GEMINI_API_KEY is not set."); 
+        return false;
+    }
+    return true;
+  },
+
   generateDescription: async (storeName: string, keywords: string) => {
-    // Simulate AI delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const adjectives = ['vibrant', 'authentic', 'fresh', 'busting', 'premium', 'hand-picked'];
-    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-    
-    return `Welcome to ${storeName}, your source for ${adj} goods! We pride ourselves on offering the best quality items, selected just for you. ${keywords ? `Specializing in ${keywords}.` : ''} Come visit us and experience the difference!`;
+    if (!aiService.checkAvailability()) {
+        // Fallback Mock
+        return `Welcome to ${storeName}! We offer great products related to ${keywords}.`;
+    }
+
+    try {
+        const prompt = `Write a short description for a store named "${storeName}". Keywords: ${keywords}. Under 50 words.`;
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+    } catch (error) {
+        console.error("AI Error:", error);
+        return `Welcome to ${storeName}!`;
+    }
   },
 
   suggestCategories: async (name: string, description: string) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Simple keyword matching simulation
-    const text = (name + ' ' + description).toLowerCase();
-    const suggestions = [];
-    
-    if (text.match(/apple|banana|fruit|orange/)) suggestions.push('Fruits');
-    if (text.match(/carrot|potato|veg|onion/)) suggestions.push('Vegetables');
-    if (text.match(/bread|cake|pastry/)) suggestions.push('Bakery');
-    if (text.match(/shirt|dress|cloth/)) suggestions.push('Clothing');
-    if (text.match(/necklace|ring|jewelry/)) suggestions.push('Accessories');
-    
-    if (suggestions.length === 0) suggestions.push('General', 'New Arrivals');
-    
-    return suggestions;
+    if (!aiService.checkAvailability()) return ['New Arrivals', 'General'];
+
+    try {
+        const prompt = `Suggest 5 categories for store "${name}" (${description}). 
+        Return ONLY comma-separated list.`;
+        
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        return text.split(',').map(s => s.trim().replace(/\.$/, ''));
+    } catch (error) {
+        return ['General'];
+    }
   },
 
   generateDailySummary: async (products: any[]) => {
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    if (products.length === 0) return "Check out our stall for exciting updates coming soon!";
-    
-    const newItems = products.slice(0, 3).map(p => p.name).join(', ');
-    return `📢 What's New Today! \n\nWe've just restocked some amazing items: ${newItems} and more! \n\n🔥 Best prices in the market. \n📍 Visit us now before they're gone! #MarketVerse #FreshStock`;
+    if (!aiService.checkAvailability()) return "Come check out our fresh stock!";
+
+    try {
+        const names = products.slice(0, 5).map(p => p.name).join(', ');
+        const prompt = `Write a daily update for a store with new items: ${names}. Max 200 chars. Use emojis.`;
+        
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+    } catch (error) {
+        return "New items in stock! Visit us today.";
+    }
   },
 
   getTrendingProducts: async (category: string) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const trends: Record<string, string[]> = {
-        'Fruits': ['Organic Honeycrisp Apples', 'Exotic Dragonfruit', 'Seasoned Berries'],
-        'Vegetables': ['Kale Bundles', 'Rainbow Carrots', 'Heirloom Tomatoes'],
-        'Bakery': ['Sourdough Loaves', 'Gluten-Free Muffins', 'Artisan Croissants'],
-        'Clothing': ['Vintage Denim', 'Hand-knitted Scarves', 'Summer Linens'],
-        'Accessories': ['Beaded Necklaces', 'Silver Rings', 'Canvas Totes']
-    };
-    
-    return trends[category] || ['Local Favorites', 'Best Sellers', 'Seasonal Picks'];
+    if (!aiService.checkAvailability()) return [`Trending ${category}`, `Top ${category}`];
+
+    try {
+        const prompt = `List 5 trending products for category "${category}". Return JSON array of strings only.`;
+        const result = await model.generateContent(prompt);
+        const text = result.response.text().replace(/```json|```/g, '').trim();
+        return JSON.parse(text);
+    } catch (error) {
+        return [`${category} Special`];
+    }
   }
 };

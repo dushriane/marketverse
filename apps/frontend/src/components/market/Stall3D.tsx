@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text, Html } from '@react-three/drei';
-import { MarketVendor } from '../../stores/marketStore';
+import { useMarketStore, MarketVendor } from '../../stores/marketStore';
 import * as THREE from 'three';
 
 interface Stall3DProps {
@@ -13,6 +13,7 @@ interface Stall3DProps {
 
 export function Stall3D({ vendor, position, onClick, isSelected }: Stall3DProps) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const { enterStall } = useMarketStore();
   const [hovered, setHovered] = useState(false);
 
   useFrame((state) => {
@@ -88,11 +89,20 @@ export function Stall3D({ vendor, position, onClick, isSelected }: Stall3DProps)
       </Text>
 
         {isSelected && (
-            <Html position={[0, 4, 0]} center>
-                <div className="bg-white p-2 rounded shadow-lg text-sm w-48 text-center pointer-events-none">
-                    <p className="font-bold">{vendor.storeName}</p>
-                    <p className="text-gray-500 text-xs">{vendor.description || "No description"}</p>
-                    <p className="text-indigo-600 text-xs mt-1">{vendor.productCount} products</p>
+            <Html position={[0, 4, 0]} center zIndexRange={[100, 0]}>
+                <div className="bg-white p-3 rounded-lg shadow-xl text-sm w-48 text-center pointer-events-auto transition-all transform scale-100 opacity-100">
+                    <p className="font-bold text-gray-800 text-lg mb-1">{vendor.storeName}</p>
+                    <p className="text-gray-500 text-xs mb-2">{vendor.description || "No description"}</p>
+                    <div className="flex justify-between items-center px-2 mb-2">
+                        <span className="text-xs font-medium text-gray-400">Products</span>
+                        <span className="text-sm font-bold text-indigo-600">{vendor.productCount}</span>
+                    </div>
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); enterStall(); }}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 rounded transition-colors"
+                    >
+                        Enter Stall
+                    </button>
                 </div>
             </Html>
         )}

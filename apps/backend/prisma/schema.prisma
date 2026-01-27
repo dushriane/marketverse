@@ -1,0 +1,163 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  BUYER
+  VENDOR
+  GOV_AUDITOR
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  role          Role      @default(BUYER)
+  fullName      String?
+  walletAddress String?
+  createdAt     DateTime  @default(now())
+  
+  // Relations
+  vendorProfile  VendorProfile?
+  transactions   Transaction[]
+  reservations   Reservation[]
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+}
+
+model VendorProfile {
+  id          String   @id @default(uuid())
+  storeName   String
+  description String?
+  profileImage String? // URL to uploaded image
+    
+  isVerified  Boolean  @default(false)
+  rating      Float    @default(0.0)
+  
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  
+  stalls      Stall[]
+}
+
+model Market {
+  id          String   @id @default(uuid())
+  name        String
+  location    String   // e.g., "Central_Instance_1"
+  environmentId String // e.g., "sunny_outdoor_v1"
+  
+  stalls      Stall[]
+}
+
+model Stall {
+  id          String   @id @default(uuid())
+  name        String // e.g. "Stall 101"
+  stallNumber String?
+  locationDescription String? // "Block A, Floor 2" -- floor/block/section
+  
+  marketId    String
+  market      Market   @relation(fields: [marketId], references: [id])
+  
+  vendorId    String
+  vendor      VendorProfile @relation(fields: [vendorId], references: [id])
+  
+  products     Product[]
+  reservations Reservation[]
+  
+  @@index([marketId])
+}
+
+model Reservation {
+  id          String   @id @default(uuid())
+  
+  buyerId     String
+  buyer       User     @relation(fields: [buyerId], references: [id])
+  
+  stallId     String
+  stall       Stall    @relation(fields: [stallId], references: [id])
+  
+  date        DateTime
+  status      String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  
+  senderId    String
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id])
+  
+  receiverId  String
+  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  
+  content     String
+  isRead      Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  stock       Int      @default(0)
+  category    String
+  
+  stallId     String
+  stall       Stall    @relation(fields: [stallId], references: [id])
+  
+  // 3D Metadata
+  meshId      String?  // Reference to GLB/Structure
+  positionX   Float    @default(0.0)
+  positionY   Float    @default(0.0)
+  positionZ   Float    @default(0.0)
+  
+  transactions TransactionItem[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  buyerId     String?  // nullable for anonymous cash? No, let's say logged in.
+  buyer       User?    @relation(fields: [buyerId], references: [id])
+  
+  totalAmount Float
+  status      String   // PENDING, COMPLETED, FAILED
+  
+  items       TransactionItem[]
+  
+  createdAt   DateTime @default(now())
+}
+
+model TransactionItem {
+  id            String      @id @default(uuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  
+  productId     String
+  product       Product     @relation(fields: [productId], references: [id])
+  
+  quantity      Int
+  priceAtTime   Float
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String   // e.g. "SALE_COMPLETED", "PRICE_UPDATE"
+  details     Json
+  timestamp   DateTime @default(now())
+}
