@@ -1,6 +1,6 @@
-import { useRef, useState, useMemo, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
-import { useCursor, Text, Html } from '@react-three/drei';
+import { useCursor, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useMarketStore } from '../../stores/marketStore';
 
@@ -64,7 +64,7 @@ function Product3D({ product, onSelect, isSelected }: { product: ProductData, on
 function NavigationFloor() {
   const { camera } = useThree();
   const [target, setTarget] = useState<THREE.Vector3 | null>(null);
-  const dummyVec = useMemo(() => new THREE.Vector3(), []);
+  //const dummyVec = useMemo(() => new THREE.Vector3(), []);
 
   const handleFloorClick = (e: any) => {
       // Simple validation to keep inside bounds (e.g., radius of 8)

@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useThree, useFrame } from '@react-three/fiber';
+import { useThree } from '@react-three/fiber';
 import { PerspectiveCamera, MapControls } from '@react-three/drei';
 
 export function PlayerControls() {
