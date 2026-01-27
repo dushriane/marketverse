@@ -89,7 +89,7 @@ function App() {
         <Route path="/analytics" element={<PrivateRoute><Layout><Analytics /></Layout></PrivateRoute>} />
         <Route path="/admin" element={<PrivateRoute><Layout><AdminDashboard /></Layout></PrivateRoute>} />
       </Routes>
-    </BrowserRouter>>
+    </BrowserRouter>
   );
 }
 
