@@ -64,13 +64,16 @@ export const GenerateDescriptionSchema = z.object({
 
 export const ReservationSchema = z.object({
   id: z.string().optional(),
-  vendorId: z.string(),
-  productId: z.string(),
-  productName: z.string(), // Denormalized for display convenience
+  vendorId: z.string().optional(),
+  productId: z.string().optional(),
+  productName: z.string(), 
   customerName: z.string(),
-  customerPhone: z.string(),
-  status: z.enum(['pending', 'fulfilled', 'cancelled']).default('pending'),
-  createdAt: z.string().optional(), // ISO String
+  customerPhone: z.string().optional(),
+  userId: z.string().optional(), // Added for messaging
+  quantity: z.number().optional(),
+  total: z.number().optional(),
+  status: z.enum(['pending', 'fulfilled', 'cancelled', 'COMPLETED']).default('pending'), // Added COMPLETED which is from Transaction
+  createdAt: z.string().optional(),
 });
 
 export type Reservation = z.infer<typeof ReservationSchema>;

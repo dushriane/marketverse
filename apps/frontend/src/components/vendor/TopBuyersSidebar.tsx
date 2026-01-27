@@ -24,7 +24,7 @@ export function TopBuyersSidebar() {
                     <li key={stat.user.id || idx} className="py-3 flex justify-between items-center">
                         <div>
                             <p className="text-sm font-medium text-gray-900">{stat.user.name || 'Anonymous'}</p>
-                            <p className="text-xs text-gray-500">{stat.count} purchases (Total: ${stat.total.toFixed(2)})</p>
+                            <p className="text-xs text-gray-500">{stat.count} purchases (Total: RWF {stat.total.toLocaleString()})</p>
                         </div>
                         <button 
                             onClick={() => handleMessage(stat.user.id)}

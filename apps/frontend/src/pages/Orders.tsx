@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useOrderStore } from '../stores/orderStore';
 import { useCartStore } from '../stores/cartStore';
@@ -26,6 +27,7 @@ export function Orders() {
 function VendorOrders() {
     const { reservations, isLoading, fetchReservations, updateReservationStatus } = useOrderStore();
     const [vendorId, setVendorId] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Fetch my profile to get ID
@@ -65,8 +67,17 @@ function VendorOrders() {
                                 <div>
                                     <p className="text-sm font-medium text-indigo-600">{r.customerName}</p>
                                     <p className="text-sm text-gray-500">{r.productName}</p>
+                                    {r.total && <p className="text-xs text-purple-600 mt-1">Total: RWF {r.total.toLocaleString()}</p>}
                                 </div>
                                 <div className="flex items-center space-x-2">
+                                    {r.userId && (
+                                        <button 
+                                            onClick={() => navigate(`/messages?partner=${r.userId}`)}
+                                            className="text-xs border border-indigo-500 text-indigo-500 px-2 py-1 rounded hover:bg-indigo-50 mr-2"
+                                        >
+                                            Message
+                                        </button>
+                                    )}
                                     {getStatusBadge(r.status)}
                                     {r.status === 'pending' && (
                                         <button 
@@ -132,11 +143,11 @@ function BuyerOrders() {
                                     {item.image && <img src={item.image} alt={item.name} className="w-12 h-12 rounded object-cover" />}
                                     <div>
                                         <h3 className="font-medium text-gray-900">{item.name}</h3>
-                                        <p className="text-sm text-gray-500">${item.price.toFixed(2)} x {item.quantity}</p>
+                                        <p className="text-sm text-gray-500">RWF {item.price.toLocaleString()} x {item.quantity}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center space-x-4">
-                                    <span className="font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
+                                    <span className="font-semibold">RWF {(item.price * item.quantity).toLocaleString()}</span>
                                     <button 
                                         onClick={() => removeFromCart(item.productId)}
                                         className="text-red-500 hover:text-red-700 font-bold"
@@ -148,7 +159,7 @@ function BuyerOrders() {
                         ))}
                         
                         <div className="pt-4 flex justify-between items-center">
-                            <div className="text-lg font-bold text-gray-900">Total: ${cartTotal.toFixed(2)}</div>
+                            <div className="text-lg font-bold text-gray-900">Total: RWF {cartTotal.toLocaleString()}</div>
                             <button
                                 onClick={handleCheckout}
                                 disabled={checkingOut || isLoading}
@@ -179,7 +190,7 @@ function BuyerOrders() {
                                     </div>
                                     <div>
                                         <span className="text-sm text-gray-500">Total</span>
-                                        <div className="text-sm font-medium text-gray-900">${order.totalAmount.toFixed(2)}</div>
+                                        <div className="text-sm font-medium text-gray-900">RWF {order.totalAmount.toLocaleString()}</div>
                                     </div>
                                     <div>
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -199,7 +210,7 @@ function BuyerOrders() {
                                                 </div>
                                             </div>
                                             <div className="text-sm font-medium text-gray-900">
-                                                ${item.priceAtTime.toFixed(2)}
+                                                RWF {item.priceAtTime.toLocaleString()}
                                             </div>
                                         </li>
                                     ))}

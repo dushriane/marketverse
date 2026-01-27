@@ -25,7 +25,8 @@ export const useOrderStore = create<OrderState>((set) => ({
   fetchReservations: async (vendorId) => {
     set({ isLoading: true });
     try {
-      const res = await api.get(`/vendors/${vendorId}/reservations`);
+      // Changed to use the new route that derives vendor from token
+      const res = await api.get(`/orders/vendor`);
       set({ reservations: res.data });
     } catch (e) { console.error(e); }
     finally { set({ isLoading: false }); }
@@ -33,7 +34,7 @@ export const useOrderStore = create<OrderState>((set) => ({
 
   updateReservationStatus: async (id, status) => {
     try {
-      await api.put(`/reservations/${id}/status`, { status });
+      await api.put(`/orders/${id}/status`, { status });
       set((state) => ({
         reservations: state.reservations.map(r => r.id === id ? { ...r, status } : r)
       }));

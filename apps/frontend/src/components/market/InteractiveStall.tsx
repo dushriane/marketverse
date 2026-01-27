@@ -53,7 +53,7 @@ function Product3D({ product, onSelect, isSelected }: { product: ProductData, on
       {hovered && (
           <Html position={[0, 0.6, 0]} center pointerEvents="none">
               <div className="bg-black/75 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                  {product.name} - ${product.price.toFixed(2)}
+                  {product.name} - RWF {product.price.toLocaleString()}
               </div>
           </Html>
       )}
@@ -152,7 +152,7 @@ export function InteractiveStall() {
                      <div className="w-full h-48 bg-gray-200 rounded-lg mb-6 flex items-center justify-center text-gray-400">
                          Product Image Preview
                      </div>
-                     <p className="text-2xl text-indigo-600 font-bold mb-4">${selectedProduct.price.toFixed(2)}</p>
+                     <p className="text-2xl text-indigo-600 font-bold mb-4">RWF {selectedProduct.price.toLocaleString()}</p>
                      <p className="text-gray-600 mb-8 flex-grow">
                          This is a premium quality item sourced directly from local producers. 
                          Freshness guaranteed and handled with care.
