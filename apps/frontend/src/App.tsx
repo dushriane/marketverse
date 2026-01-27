@@ -9,6 +9,7 @@ import { Orders } from './pages/Orders';
 import { Messages } from './pages/Messages';
 import { Analytics } from './pages/Analytics';
 import { MarketExplore } from './pages/MarketExplore';
+import { AdminDashboard } from './pages/AdminDashboard';
 import { useAuthStore } from './stores/authStore';
 import { Link, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
@@ -35,6 +36,7 @@ function NavLink({ to, children }: { to: string, children: React.ReactNode }) {
 }
 
 function Layout({ children }: { children: React.ReactNode }) {
+  const { user } = useAuthStore();
   return (
     <div>
       <nav className="bg-white border-b border-gray-200">
@@ -50,6 +52,7 @@ function Layout({ children }: { children: React.ReactNode }) {
                 <NavLink to="/messages">Messages</NavLink>
                 <NavLink to="/analytics">Analytics</NavLink>
                 <NavLink to="/profile">Profile</NavLink>
+                {user?.role === 'ADMIN' && <NavLink to="/admin">Admin</NavLink>}
               </div>
             </div>
           </div>
@@ -81,8 +84,9 @@ function App() {
         <Route path="/orders" element={<PrivateRoute><Layout><Orders /></Layout></PrivateRoute>} />
         <Route path="/messages" element={<PrivateRoute><Layout><Messages /></Layout></PrivateRoute>} />
         <Route path="/analytics" element={<PrivateRoute><Layout><Analytics /></Layout></PrivateRoute>} />
+        <Route path="/admin" element={<PrivateRoute><Layout><AdminDashboard /></Layout></PrivateRoute>} />
       </Routes>
-    </BrowserRouter>
+    </BrowserRouter>>
   );
 }
 
