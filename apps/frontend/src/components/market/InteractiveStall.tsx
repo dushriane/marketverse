@@ -3,6 +3,7 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { useCursor, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useMarketStore } from '../../stores/marketStore';
+import { useCartStore } from '../../stores/cartStore'; // Added cart store
 
 interface ProductData {
   id: string;
@@ -96,6 +97,7 @@ function NavigationFloor() {
 
 export function InteractiveStall() {
   const { exitStall } = useMarketStore();
+  const { addToCart } = useCartStore(); // Use addToCart action
   const [selectedProduct, setSelectedProduct] = useState<ProductData | null>(null);
 
   // Initial camera setup
@@ -159,7 +161,20 @@ export function InteractiveStall() {
                      </p>
                      
                      <div className="space-y-4 mt-auto">
-                        <button className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-medium transition-colors">
+                        <button
+                            onClick={() => {
+                                // Since dummy products lack real IDs, mapping them to a cart-compatible format
+                                // In a real app, interactive stall would fetch real products from props or store
+                                addToCart({
+                                    id: selectedProduct.id,
+                                    name: selectedProduct.name,
+                                    price: selectedProduct.price,
+                                });
+                                alert('Added to cart!');
+                                setSelectedProduct(null);
+                            }}
+                            className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-medium transition-colors"
+                        >
                             Add to Cart
                         </button>
                         <button 

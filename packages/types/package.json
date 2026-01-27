@@ -9,6 +9,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "socket.io-client": "^4.8.3",
     "zod": "^3.22.4"
   }
 }

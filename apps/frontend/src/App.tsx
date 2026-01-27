@@ -3,7 +3,6 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { LandingPage } from './pages/LandingPage';
 import { ToastContainer } from './components/ui/ToastContainer';
-import { Onboarding } from './pages/Onboarding';
 import { Profile } from './pages/Profile';
 import { ProductList } from './pages/ProductList';
 import { ProductForm } from './pages/ProductForm';
@@ -76,7 +75,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/explore" element={<MarketExplore />} />
-        <Route path="/onboarding" element={<Onboarding />} />
         
         <Route path="/profile" element={<PrivateRoute><Layout><Profile /></Layout></PrivateRoute>} />
         

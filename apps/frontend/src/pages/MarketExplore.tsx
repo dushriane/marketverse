@@ -133,9 +133,7 @@ export function MarketExplore() {
                             <button className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition shadow-sm">
                                 View Products ({vendor.productCount})
                             </button>
-                            <p className="text-xs text-center text-gray-400 mt-2">
-                                *Full product browsing coming soon
-                            </p>
+                            {/* In a real app, this would show product list to add to cart */}
                          </div>
                      </div>
                  );

@@ -43,12 +43,12 @@ export function ProductForm() {
     }
   }, [isEdit, existingProduct, reset, vendor, setValue]);
 
-  const onImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'imageUrl' | 'meshUrl') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('file', file);
     setUploading(true);
 
     try {
@@ -56,8 +56,8 @@ export function ProductForm() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       const url = res.data.url;
-      setValue('imageUrl', url);
-      setPreviewImage(url);
+      setValue(field, url);
+      if (field === 'imageUrl') setPreviewImage(url);
     } catch (err) {
       alert('Upload failed');
     } finally {
@@ -133,7 +133,7 @@ export function ProductForm() {
               <input
                 type="file"
                 accept="image/*"
-                onChange={onImageUpload}
+                onChange={(e) => onFileUpload(e, 'imageUrl')}
                 disabled={uploading}
                 className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
               />
@@ -142,6 +142,20 @@ export function ProductForm() {
           </div>
           <input type="hidden" {...register('imageUrl')} />
           {errors.imageUrl && <p className="text-red-500 text-sm mt-1">Image is required</p>}
+        </div>
+
+        {/* 3D Model Upload (Optional) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">3D Model (.glb, .gltf)</label>
+          <input
+              type="file"
+              accept=".glb,.gltf"
+              onChange={(e) => onFileUpload(e, 'meshUrl')}
+              disabled={uploading}
+              className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
+          <input type="hidden" {...register('meshUrl')} />
+          <p className="text-xs text-gray-500 mt-1">Optional. Allows users to view your product in 3D space.</p>
         </div>
 
         {/* AI Generation */}

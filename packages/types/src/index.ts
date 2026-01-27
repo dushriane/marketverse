@@ -51,6 +51,7 @@ export const ProductSchema = z.object({
   isNegotiable: z.boolean().default(false),
   category: ProductCategory,
   imageUrl: z.string().url().optional().or(z.literal('')),
+  meshUrl: z.string().optional().or(z.literal('')), // URL to .glb/.gltf model
   status: z.enum(['available', 'out_of_stock']).default('available'),
   viewCount: z.number().default(0),
 });

@@ -8,16 +8,39 @@ interface UserSession {
 }
 
 export class SocketService {
-  private io: Server;
+  private static instance: SocketService;
+  private io: Server | null = null;
 
-  constructor(io: Server) {
+  private constructor() {}
+
+  public static getInstance(): SocketService {
+    if (!SocketService.instance) {
+      SocketService.instance = new SocketService();
+    }
+    return SocketService.instance;
+  }
+
+  public init(io: Server) {
     this.io = io;
     this.initialize();
   }
 
+  public emitToUser(userId: string, event: string, data: any) {
+    if (this.io) {
+      this.io.to(userId).emit(event, data);
+    }
+  }
+
   private initialize() {
+    if (!this.io) return;
     this.io.on('connection', (socket: Socket) => {
       console.log(`Client connected: ${socket.id}`);
+
+      // Allow client to join their own room for private messages
+      socket.on('join_user', (userId: string) => {
+          socket.join(userId);
+          console.log(`Socket ${socket.id} joined user room ${userId}`);
+      });
 
       socket.on('join_stall', async (data: { stallId: string; userId: string; role: string }) => {
         await this.handleJoinStall(socket, data);
@@ -28,10 +51,12 @@ export class SocketService {
       });
 
       socket.on('vendor_status_update', async (data: { stallId: string; status: 'online' | 'offline' }) => {
-        this.io.to(`stall_${data.stallId}`).emit('vendor_presence', {
-            stallId: data.stallId,
-            status: data.status
-        });
+        if (this.io) {
+            this.io.to(`stall_${data.stallId}`).emit('vendor_presence', {
+                stallId: data.stallId,
+                status: data.status
+            });
+        }
       });
       
       socket.on('disconnect', () => {
@@ -66,10 +91,12 @@ export class SocketService {
 
   // Called by REST API when a price changes
   public broadcastPriceUpdate(stallId: string, productId: string, newPrice: number) {
-    this.io.to(`stall_${stallId}`).emit('price_update', {
-      productId,
-      newPrice,
-      timestamp: new Date().toISOString()
-    });
+    if (this.io) {
+        this.io.to(`stall_${stallId}`).emit('price_update', {
+          productId,
+          newPrice,
+          timestamp: new Date().toISOString()
+        });
+    }
   }
 }

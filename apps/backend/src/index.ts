@@ -36,7 +36,8 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // --- Initialize Services ---
-const socketService = new SocketService(io);
+// Initialize singleton
+SocketService.getInstance().init(io);
 
 // --- Routes ---
 app.use('/api/auth', authRoutes);
@@ -48,7 +49,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/messages', messageRoutes);
 
 // --- Utility Routes (Uploads & AI) ---
-app.post('/api/upload', upload.single('image'), (req, res) => {
+// Changed field name to 'file' to support generic uploads (images, 3D models)
+app.post('/api/upload', upload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
     res.json({ url: `/uploads/${req.file.filename}` });
 });

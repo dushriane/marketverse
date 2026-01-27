@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/prisma';
+import { SocketService } from '../services/socketService';
 
 interface AuthRequest extends Request {
     user?: { userId: string; role: string; }
@@ -17,11 +18,12 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
                 senderId,
                 receiverId,
                 content
-            }
+            },
+            include: { sender: { select: { fullName: true, email: true } } }
         });
         
-        // Note: Socket event should be emitted here in a real app
-        // e.g., io.to(receiverId).emit('newMessage', message);
+        // Emit real-time event
+        SocketService.getInstance().emitToUser(receiverId, 'new_message', message);
         
         res.status(201).json(message);
     } catch (e: any) {

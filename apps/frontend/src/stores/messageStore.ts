@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
+import { io, Socket } from 'socket.io-client';
 
 export interface Message {
   id: string;
@@ -23,16 +24,39 @@ interface MessageState {
   messages: Message[];
   topBuyers: BuyerStat[];
   isLoading: boolean;
+  socket: Socket | null;
   
   fetchMessages: () => Promise<void>;
   sendMessage: (receiverId: string, content: string) => Promise<void>;
   fetchTopBuyers: () => Promise<void>;
+  connectSocket: (userId: string) => void;
+  disconnectSocket: () => void;
 }
 
-export const useMessageStore = create<MessageState>((set) => ({
+export const useMessageStore = create<MessageState>((set, get) => ({
   messages: [],
   topBuyers: [],
   isLoading: false,
+  socket: null,
+
+  connectSocket: (userId: string) => {
+      if (get().socket) return;
+      const socket = io('http://localhost:3000');
+      socket.on('connect', () => {
+          console.log('Connected to socket', socket.id);
+          socket.emit('join_user', userId);
+      });
+      socket.on('new_message', (message: Message) => {
+          set(state => ({ messages: [message, ...state.messages] }));
+      });
+      set({ socket });
+  },
+
+  disconnectSocket: () => {
+      get().socket?.disconnect();
+      set({ socket: null });
+  },
+
 
   fetchMessages: async () => {
     set({ isLoading: true });
