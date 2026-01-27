@@ -64,6 +64,7 @@ export function Analytics() {
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Analytics & Insights</h1>
+        {loading && <span className="text-sm text-gray-500 animate-pulse">Updating...</span>}
         <div className="space-x-4">
             <button 
                 onClick={() => handleDownload('csv')}
