@@ -19,7 +19,8 @@ export const useProductStore = create<ProductState>((set) => ({
   fetchProducts: async (vendorId) => {
     set({ isLoading: true });
     try {
-      const res = await api.get(`/vendors/${vendorId}/products`);
+      // Use the Vendor Dashboard private endpoint
+      const res = await api.get('/vendor/products');
       set({ products: res.data });
     } catch (error) {
       console.error('Failed to fetch products', error);

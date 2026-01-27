@@ -9,6 +9,9 @@ const router = Router();
 router.get('/profile', authenticateToken, requireRole('VENDOR'), vendorController.getMyProfile);
 router.put('/profile', authenticateToken, requireRole('VENDOR'), upload.single('profileImage'), vendorController.updateProfile);
 
+// Product Management (My Products)
+router.get('/products', authenticateToken, requireRole('VENDOR'), vendorController.getMyProducts);
+
 // Stall Management
 router.get('/stalls', authenticateToken, requireRole('VENDOR'), vendorController.getMyStalls);
 router.post('/stalls', authenticateToken, requireRole('VENDOR'), vendorController.createStall);

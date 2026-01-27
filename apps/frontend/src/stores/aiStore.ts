@@ -1,7 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:3000/api';
+import { api } from '../lib/api';
 
 interface AIState {
   isGenerating: boolean;
@@ -27,7 +25,7 @@ export const useAIStore = create<AIState>((set) => ({
   generateDescription: async (storeName, keywords) => {
     set({ isGenerating: true, generatedDescription: null });
     try {
-      const res = await axios.post(`${API_URL}/ai/description`, { storeName, keywords });
+      const res = await api.post('/ai/generate-description', { storeName, keywords });
       set({ generatedDescription: res.data.description });
     } catch (error) {
       console.error(error);
@@ -39,7 +37,7 @@ export const useAIStore = create<AIState>((set) => ({
   suggestCategories: async (name, description) => {
     set({ isGenerating: true, suggestedCategories: [] });
     try {
-      const res = await axios.post(`${API_URL}/ai/categories`, { name, description });
+      const res = await api.post('/ai/suggest-categories', { name, description });
       set({ suggestedCategories: res.data.categories });
     } catch (error) {
       console.error(error);

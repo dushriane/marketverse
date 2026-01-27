@@ -62,6 +62,7 @@ model Stall {
   id          String   @id @default(uuid())
   name        String // e.g. "Stall 101"
   stallNumber String?
+  floor       Int?
   locationDescription String? // "Block A, Floor 2" -- floor/block/section
   
   marketId    String

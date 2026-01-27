@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { RegisterSchema, RegisterRequest } from '@marketverse/types';
 import { api } from '../lib/api';
-import { useAuthStore } from '../stores/authStore';
+//import { useAuthStore } from '../stores/authStore';
 import { useNavigate, Link } from 'react-router-dom';
 
 export function Register() {

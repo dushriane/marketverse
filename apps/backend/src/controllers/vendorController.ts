@@ -28,6 +28,36 @@ export const getMyProfile = async (req: AuthRequest, res: Response) => {
     }
 }
 
+export const getMyProducts = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+        // Find vendor profile -> stalls -> products
+        const profile = await prisma.vendorProfile.findUnique({
+            where: { userId },
+            include: { 
+                stalls: {
+                    include: {
+                        products: true
+                    }
+                } 
+            }
+        });
+
+        if (!profile) return res.status(404).json({ error: 'Vendor profile not found' });
+        
+        // Flatten all products from all stalls
+        const products = profile.stalls.flatMap(stall => 
+            stall.products.map(p => ({ ...p, stallName: stall.name }))
+        );
+        
+        res.json(products);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+}
+
 export const updateProfile = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.userId;
