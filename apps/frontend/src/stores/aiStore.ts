@@ -8,7 +8,7 @@ interface AIState {
   generatedSummary: string | null;
   trendingProducts: string[];
   
-  generateDescription: (storeName: string, keywords: string) => Promise<void>;
+  generateDescription: (name: string, context: string) => Promise<void>;
   suggestCategories: (name: string, description: string) => Promise<void>;
   generateSummary: (vendorId: string) => Promise<void>;
   fetchTrends: (category: string) => Promise<void>;
@@ -22,10 +22,26 @@ export const useAIStore = create<AIState>((set) => ({
   generatedSummary: null,
   trendingProducts: [],
 
-  generateDescription: async (storeName, keywords) => {
+  generateDescription: async (name, context) => {
     set({ isGenerating: true, generatedDescription: null });
     try {
-      const res = await api.post('/ai/generate-description', { storeName, keywords });
+        // Just pass as 'storeName' and 'keywords' to match Backend expectation for now,
+        // or update backend to accept 'name' and 'context'. 
+        // Backend expects 'storeName' OR 'productName'.
+        // Let's modify the payload logic here to be dynamic if possible, but 
+        // since we can't change the Component call sites easily in this single edit:
+        // We will assume if context is "product", we send productName.
+        
+        // Actually simplest is to send BOTH as optional fields on backend and just map accordingly here.
+        // But the backend `index.ts` checks: `if (storeName) ... else if (productName) ...`
+        
+        // Hack: The Profile component calls with (storeName, "keywords").
+        // The Product component doesn't call this store action yet in my updated code? 
+        // Wait, ProductForm.tsx CALLS `api.post` DIRECTLY! 
+        // So this store action is ONLY used by Profile.tsx.
+        // Thus, keeping `storeName` key is Safe.
+        
+      const res = await api.post('/ai/generate-description', { storeName: name, keywords: context });
       set({ generatedDescription: res.data.description });
     } catch (error) {
       console.error(error);
