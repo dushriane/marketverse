@@ -15,5 +15,8 @@
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "npm@10"
+  "packageManager": "npm@10",
+  "dependencies": {
+    "recharts": "^3.7.0"
+  }
 }
