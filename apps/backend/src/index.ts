@@ -8,13 +8,19 @@ import authRoutes from './routes/authRoutes';
 import productRoutes from './routes/productRoutes';
 import transactionRoutes from './routes/transactionRoutes';
 import vendorRoutes from './routes/vendorRoutes';
+import adminRoutes from './routes/adminRoutes';
+import messageRoutes from './routes/messageRoutes';
 import { SocketService } from './services/socketService';
 import { prisma } from './config/prisma';
+import path from 'path';
 
 dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
+
+// Serve uploads
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 const io = new Server(httpServer, {
   cors: {
     origin: "*", // Adjust for production
@@ -36,6 +42,8 @@ app.use('/api/market', marketRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', transactionRoutes);
 app.use('/api/vendor', vendorRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/messages', messageRoutes);
 
 // --- Health Check ---
 app.get('/health', (req, res) => {

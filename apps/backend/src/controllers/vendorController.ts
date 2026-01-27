@@ -32,15 +32,21 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.userId;
         const { storeName, description } = req.body;
+        // If file was uploaded by multer, it's at req.file
+        // 'profileImage' is the field name we expect
+        const profileImage = req.file ? `/uploads/${req.file.filename}` : undefined;
         
         if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
         // Update logic
+        const dataToUpdate: any = {};
+        if (storeName) dataToUpdate.storeName = storeName;
+        if (description) dataToUpdate.description = description;
+        if (profileImage) dataToUpdate.profileImage = profileImage;
+
         const updated = await prisma.vendorProfile.update({
             where: { userId },
-            data: {
-                storeName, description
-            }
+            data: dataToUpdate
         });
         
         res.json(updated);
@@ -75,7 +81,7 @@ export const getMyStalls = async (req: AuthRequest, res: Response) => {
 export const createStall = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.userId;
-        const { name, marketId } = req.body;
+        const { name, marketId, stallNumber, locationDescription, floor } = req.body;
 
         if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -86,7 +92,10 @@ export const createStall = async (req: AuthRequest, res: Response) => {
             data: {
                 name,
                 marketId,
-                vendorId: profile.id
+                vendorId: profile.id,
+                stallNumber: stallNumber || "000",
+                locationDescription: locationDescription || "",
+                floor: floor ? parseInt(floor) : null
             }
         });
 
@@ -100,7 +109,7 @@ export const updateStall = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.userId;
         const { id } = req.params;
-        const { name } = req.body;
+        const { name, stallNumber, locationDescription, floor } = req.body;
 
         if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -115,9 +124,15 @@ export const updateStall = async (req: AuthRequest, res: Response) => {
             return res.status(403).json({ error: 'You do not own this stall' });
         }
 
+        const data: any = {};
+        if (name) data.name = name;
+        if (stallNumber) data.stallNumber = stallNumber;
+        if (locationDescription) data.locationDescription = locationDescription;
+        if (floor !== undefined) data.floor = parseInt(floor);
+
         const updated = await prisma.stall.update({
             where: { id },
-            data: { name }
+            data: data
         });
 
         res.json(updated);

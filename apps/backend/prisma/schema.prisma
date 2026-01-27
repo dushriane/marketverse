@@ -14,6 +14,7 @@ enum Role {
   BUYER
   VENDOR
   GOV_AUDITOR
+  ADMIN
 }
 
 model User {
@@ -26,14 +27,19 @@ model User {
   createdAt     DateTime  @default(now())
   
   // Relations
-  vendorProfile VendorProfile?
-  transactions  Transaction[]
+  vendorProfile  VendorProfile?
+  transactions   Transaction[]
+  reservations   Reservation[]
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 }
 
 model VendorProfile {
   id          String   @id @default(uuid())
   storeName   String
   description String?
+  profileImage String? // URL to uploaded image
+    
   isVerified  Boolean  @default(false)
   rating      Float    @default(0.0)
   
@@ -55,6 +61,8 @@ model Market {
 model Stall {
   id          String   @id @default(uuid())
   name        String // e.g. "Stall 101"
+  stallNumber String?
+  locationDescription String? // "Block A, Floor 2" -- floor/block/section
   
   marketId    String
   market      Market   @relation(fields: [marketId], references: [id])
@@ -62,9 +70,41 @@ model Stall {
   vendorId    String
   vendor      VendorProfile @relation(fields: [vendorId], references: [id])
   
-  products    Product[]
+  products     Product[]
+  reservations Reservation[]
   
   @@index([marketId])
+}
+
+model Reservation {
+  id          String   @id @default(uuid())
+  
+  buyerId     String
+  buyer       User     @relation(fields: [buyerId], references: [id])
+  
+  stallId     String
+  stall       Stall    @relation(fields: [stallId], references: [id])
+  
+  date        DateTime
+  status      String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  
+  senderId    String
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id])
+  
+  receiverId  String
+  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  
+  content     String
+  isRead      Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
 }
 
 model Product {
