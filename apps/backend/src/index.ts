@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import marketRoutes from './routes/marketRoutes';
+import authRoutes from './routes/authRoutes';
 import { SocketService } from './services/socketService';
 import { prisma } from './config/prisma';
 
@@ -27,10 +28,12 @@ app.use(express.json({ limit: '10mb' }));
 const socketService = new SocketService(io);
 
 // --- Routes ---
+app.use('/api/auth', authRoutes);
 app.use('/api/market', marketRoutes);
 
 // --- Health Check ---
 app.get('/health', (req, res) => {
+
   res.json({ status: 'ok', timestamp: new Date() });
 });
 
