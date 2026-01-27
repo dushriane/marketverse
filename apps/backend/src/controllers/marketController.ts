@@ -10,7 +10,7 @@ export const getVendors = async (req: Request, res: Response) => {
     });
     
     // Map to frontend expected format
-    const formatted = vendors.map(v => ({
+    const formatted = vendors.map((v:any) => ({
       id: v.id,
       storeName: v.storeName,
       description: v.description,
@@ -33,7 +33,7 @@ export const getStallLayout = async (req: Request, res: Response) => {
       where: { stallId: stallId }
     });
 
-    const layout = products.map(p => ({
+    const layout = products.map((p:any) => ({
       productId: p.id,
       meshId: p.meshId,
       position: { x: p.positionX, y: p.positionY, z: p.positionZ },
