@@ -84,6 +84,35 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
+    // --- MOCK LOGIN START ---
+    // Bypass actual authentication and return mock data based on requested role
+    const { role } = req.body; // Expecting { role: 'CUSTOMER' | 'VENDOR' }
+
+    if (role === 'VENDOR') {
+        return res.json({
+            token: 'MOCK_TOKEN_VENDOR',
+            user: {
+                id: 'mock-vendor-id',
+                email: 'vendor@example.com',
+                fullName: 'Mock Vendor',
+                role: 'VENDOR'
+            }
+        });
+    } else {
+        // Default to Customer/Buyer
+        return res.json({
+            token: 'MOCK_TOKEN_CUSTOMER',
+            user: {
+                id: 'mock-customer-id',
+                email: 'customer@example.com',
+                fullName: 'Mock Customer',
+                role: 'BUYER' // Using BUYER as it aligns with the schema
+            }
+        });
+    }
+    // --- MOCK LOGIN END ---
+
+    /*
     const { email, phone, password } = LoginSchema.parse(req.body);
 
     const user = await prisma.user.findFirst({
@@ -97,7 +126,9 @@ export const login = async (req: Request, res: Response) => {
         vendorProfile: true,
       }
     });
+    */
 
+    /*
     if (!user || !(await comparePassword(password, user.passwordHash))) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -107,6 +138,7 @@ export const login = async (req: Request, res: Response) => {
     const { passwordHash, ...userWithoutPassword } = user;
 
     res.json({ user: userWithoutPassword, token });
+    */
   } catch (error) {
     console.error('Login error:', error);
     if (error instanceof z.ZodError) {

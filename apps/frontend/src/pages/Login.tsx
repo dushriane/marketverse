@@ -1,28 +1,21 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { LoginSchema, LoginRequest } from '@marketverse/types';
 import { api } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export function Login() {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginRequest>({
-    resolver: zodResolver(LoginSchema)
-  });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const login = useAuthStore(state => state.login);
   const navigate = useNavigate();
 
-  const onSubmit = async (data: LoginRequest) => {
+  const handleMockLogin = async (role: 'CUSTOMER' | 'VENDOR') => {
     setIsLoading(true);
     setError('');
     try {
-      const res = await api.post('/auth/login', data);
+      // Calling the modified backend login which now accepts a role for mock login
+      const res = await api.post('/auth/login', { role });
       
-      // Update global auth store
-      // Response expects: { token, user: { userId, email, role, fullName } }
       const { token, user } = res.data;
       
       login({
@@ -30,18 +23,15 @@ export function Login() {
           token
       });
 
-      // Redirect based on role
       if (user.role === 'VENDOR') {
-        navigate('/profile'); // Vendor Dashboard
-      } else if (user.role === 'ADMIN') {
-        navigate('/admin'); // Admin Dashboard (Needs implementation)
+        navigate('/profile'); 
       } else {
-        navigate('/explore'); // Buyer goes to market
+        navigate('/explore');
       }
 
     } catch (err: any) {
         console.error("Login failed", err);
-        setError(err.response?.data?.error || 'Invalid credentials');
+        setError(err.response?.data?.error || 'Login failed');
     } finally {
         setIsLoading(false);
     }
@@ -52,10 +42,10 @@ export function Login() {
       <div className="max-w-md w-full space-y-8 bg-white p-8 shadow rounded-xl">
         <div className="text-center">
           <h2 className="text-3xl font-extrabold text-gray-900">
-            Welcome Back
+            MarketVerse
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Sign in to your account
+            Choose your role to enter the demo
           </p>
         </div>
 
@@ -65,47 +55,33 @@ export function Login() {
           </div>
         )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email or Phone</label>
-              <input
-                {...register('identifier')}
-                type="text"
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Name or Email"
-              />
-              {errors.identifier && <p className="text-red-500 text-xs mt-1">{errors.identifier.message}</p>}
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <input
-                {...register('password')}
-                type="password"
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="••••••••"
-              />
-              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
-            </div>
-
-          </div>
-
-          <div>
+        <div className="mt-8 space-y-4">
             <button
-              type="submit"
+              onClick={() => handleMockLogin('CUSTOMER')}
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-lg font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              Enter as Customer
             </button>
-          </div>
 
-          <div className="text-center mt-4">
-             <Link to="/register" className="text-indigo-600 hover:text-indigo-500 text-sm">Create an account</Link>
-          </div>
-        </form>
+            <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-gray-300"></div>
+                <span className="flex-shrink-0 mx-4 text-gray-400">or</span>
+                <div className="flex-grow border-t border-gray-300"></div>
+            </div>
+
+            <button
+              onClick={() => handleMockLogin('VENDOR')}
+              disabled={isLoading}
+              className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-lg font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
+            >
+              Enter as Vendor
+            </button>
+        </div>
+        
+        <div className="mt-6 text-center text-xs text-gray-500">
+            <p>Authentication is disabled for this demo.</p>
+        </div>
       </div>
     </div>
   );

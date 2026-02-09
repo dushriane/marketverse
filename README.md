@@ -48,6 +48,32 @@ Run this from the root directory:
 npm install --workspaces
 ```
 
+### 2. Start the Backend
+Navigate to the backend app:
+```bash
+cd apps/backend
+npm run dev
+```
+The backend will start on http://localhost:3000
+
+### 3. Start the Frontend
+Navigate to the frontend app (in a new terminal):
+```bash
+cd apps/frontend
+npm run dev
+```
+The frontend will start on http://localhost:5173
+
+### 3D Models
+If you have custom 3D models (GLB/GLTF), place them in:
+`apps/frontend/public/models/`
+
+The application uses `market_stall.glb` by default. If you don't have this file, the application might show errors or fallbacks.
+
+### Authentication
+Authentication is currently disabled for demo purposes. You can log in via the "Customer" or "Vendor" buttons on the login page without credentials.
+
+
 ### 2. Start Backend
 Open a terminal and run:
 ```bash
