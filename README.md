@@ -54,7 +54,7 @@ Navigate to the backend app:
 cd apps/backend
 npm run dev
 ```
-The backend will start on http://localhost:3000
+The backend will start on http://localhost:5000
 
 ### 3. Start the Frontend
 Navigate to the frontend app (in a new terminal):
@@ -79,7 +79,7 @@ Open a terminal and run:
 ```bash
 npm start --workspace=@marketverse/backend
 ```
-*Runs on http://localhost:3000*
+*Runs on http://localhost:5000*
 
 ### 3. Start Frontend
 Open another terminal and run:

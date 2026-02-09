@@ -31,6 +31,6 @@ RUN npm run build -w apps/backend
 # Set working directory to backend
 WORKDIR /app/apps/backend
 
-EXPOSE 3000
+EXPOSE 5000
 
 CMD ["npm", "start"]

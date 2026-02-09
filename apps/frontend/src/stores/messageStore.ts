@@ -41,7 +41,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
 
   connectSocket: (userId: string) => {
       if (get().socket) return;
-      const socket = io('http://localhost:3000');
+      const socket = io('http://localhost:5000');
       socket.on('connect', () => {
           console.log('Connected to socket', socket.id);
           socket.emit('join_user', userId);
