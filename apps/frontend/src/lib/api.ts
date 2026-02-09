@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
-// Assume backend is running on localhost:3000
-// In dev, Vite proxy could handle this, or just hardcode for now
+// In development, we rely on Vite's proxy (defined in vite.config.ts) to forward requests from /api to localhost:5000/api
+// In production, this would likely be the full URL of the backend service
 export const api = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL: '/api', 
 });
 
 api.interceptors.request.use((config) => {

@@ -6,6 +6,16 @@ interface AuthRequest extends Request {
     user?: { userId: string; role: string; }
 }
 
+export const getTopBuyers = async (req: AuthRequest, res: Response) => {
+    // Mock Data for Vendor Dashboard
+    const topBuyers = [
+        { id: '1', name: 'Alice Smith', totalSpent: 500, avatar: 'https://via.placeholder.com/40' },
+        { id: '2', name: 'Bob Jones', totalSpent: 350, avatar: 'https://via.placeholder.com/40' },
+        { id: '3', name: 'Charlie Day', totalSpent: 120, avatar: 'https://via.placeholder.com/40' }
+    ];
+    res.json(topBuyers);
+};
+
 export const sendMessage = async (req: AuthRequest, res: Response) => {
     try {
         const senderId = req.user?.userId;
@@ -47,49 +57,6 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
             orderBy: { createdAt: 'desc' }
         });
         res.json(messages);
-    } catch (e: any) {
-        res.status(500).json({ error: e.message });
-    }
-}
-
-export const getTopBuyers = async (req: AuthRequest, res: Response) => {
-    try {
-        const userId = req.user?.userId;
-        const profile = await prisma.vendorProfile.findUnique({ where: { userId } });
-        
-        if (!profile) return res.status(403).json({ error: 'Not a vendor' });
-
-        // Complex query: Find users who bought from this vendor most
-        // Simplified: Return mock or simple transaction count
-        // Prisma groupBy on TransactionItem -> Product -> Vendor is hard.
-        // We will do a raw query or simple fetch.
-        
-        // Fetch all transaction items for vendor's products
-        const items = await prisma.transactionItem.findMany({
-            where: {
-                product: { stall: { vendorId: profile.id } }
-            },
-            include: {
-                transaction: { include: { buyer: true } }
-            }
-        });
-        
-        const buyerStats: Record<string, { count: number, total: number, user: any }> = {};
-        
-        items.forEach((item: any) => {
-            const buyer = item.transaction.buyer;
-            if (!buyer) return;
-            
-            if (!buyerStats[buyer.id]) {
-                buyerStats[buyer.id] = { count: 0, total: 0, user: { id: buyer.id, name: buyer.fullName } };
-            }
-            buyerStats[buyer.id].count += 1;
-            buyerStats[buyer.id].total += (item.quantity * item.priceAtTime);
-        });
-        
-        const top = Object.values(buyerStats).sort((a,b) => b.total - a.total).slice(0, 10);
-        res.json(top);
-
     } catch (e: any) {
         res.status(500).json({ error: e.message });
     }

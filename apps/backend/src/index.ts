@@ -47,8 +47,10 @@ app.use('/api/orders', transactionRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/ai', require('./routes/ai').default || ((req:any, res:any, next:any) => next())); // Placeholder dynamic load or missing route handler
 
-// --- Utility Routes (Uploads & AI) ---
+// --- AI Routes (Merged from direct implementation) ---
+// Moved into a proper route file usually, but keeping here for context as they were inline
 // Changed field name to 'file' to support generic uploads (images, 3D models)
 app.post('/api/upload', upload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
