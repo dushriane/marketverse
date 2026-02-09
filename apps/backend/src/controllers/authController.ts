@@ -1,92 +1,148 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/prisma';
-import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
+import { hashPassword, comparePassword, generateToken } from '../utils/auth';
+import { z } from 'zod';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-in-prod';
+const RegisterSchema = z.object({
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  password: z.string().min(6),
+  fullName: z.string().min(1),
+  role: z.enum(['BUYER', 'VENDOR']).default('BUYER'),
+}).refine((data) => data.email || data.phone, {
+  message: "Either email or phone must be provided",
+});
 
-// Use standard bcrypt in production, simple hash for demo consistency with seed
-const hashPassword = (password: string) => crypto.createHash('sha256').update(password).digest('hex');
+const LoginSchema = z.object({
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  password: z.string(),
+}).refine((data) => data.email || data.phone, {
+  message: "Either email or phone must be provided",
+});
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, fullName, role } = req.body;
+    const { email, phone, password, fullName, role } = RegisterSchema.parse(req.body);
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
-
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-      return res.status(409).json({ error: 'User already exists' });
-    }
-
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        passwordHash: hashPassword(password),
-        fullName,
-        role: role || 'BUYER' // Default to Buyer if not specified
+    // Check if user exists
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          email ? { email } : {},
+          phone ? { phone } : {},
+        ].filter(obj => Object.keys(obj).length > 0)
       }
     });
 
-    // If registering as a Vendor, create an empty profile
-    if (role === 'VENDOR') {
-        await prisma.vendorProfile.create({
-            data: {
-                userId: newUser.id,
-                storeName: `${fullName}'s Store`,
-                description: 'New vendor store'
-            }
-        });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists' });
     }
 
-    const token = jwt.sign(
-        { userId: newUser.id, email: newUser.email, role: newUser.role },
-        JWT_SECRET,
-        { expiresIn: '24h' }
-    );
-
-    res.status(201).json({ 
-        message: 'User created successfully',
-        user: { id: newUser.id, email: newUser.email, role: newUser.role },
-        token 
+    // Create user
+    const passwordHash = await hashPassword(password);
+    const user = await prisma.user.create({
+      data: {
+        email: email || null,
+        phone: phone || null,
+        passwordHash,
+        fullName,
+        role,
+      },
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        fullName: true,
+        role: true,
+        createdAt: true,
+      }
     });
 
+    // If vendor, create vendor profile
+    if (role === 'VENDOR') {
+      await prisma.vendorProfile.create({
+        data: {
+          userId: user.id,
+          storeName: fullName + "'s Store",
+          description: 'Welcome to my store!',
+        }
+      });
+    }
+
+    const token = generateToken(user.id);
+
+    res.status(201).json({ user, token });
   } catch (error) {
     console.error('Registration error:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
     res.status(500).json({ error: 'Registration failed' });
   }
 };
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, phone, password } = LoginSchema.parse(req.body);
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          email ? { email } : {},
+          phone ? { phone } : {},
+        ].filter(obj => Object.keys(obj).length > 0)
+      },
+      include: {
+        vendorProfile: true,
+      }
+    });
 
-    const user = await prisma.user.findUnique({ where: { email } });
-    
-    if (!user || user.passwordHash !== hashPassword(password)) {
+    if (!user || !(await comparePassword(password, user.passwordHash))) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = jwt.sign(
-        { userId: user.id, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: '24h' }
-    );
+    const token = generateToken(user.id);
 
-    res.json({ 
-        message: 'Login successful',
-        user: { id: user.id, email: user.email, role: user.role, fullName: user.fullName },
-        token
-    });
+    const { passwordHash, ...userWithoutPassword } = user;
 
+    res.json({ user: userWithoutPassword, token });
   } catch (error) {
     console.error('Login error:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
     res.status(500).json({ error: 'Login failed' });
+  }
+};
+
+export const getProfile = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.userId;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        vendorProfile: true,
+      },
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        fullName: true,
+        role: true,
+        createdAt: true,
+        vendorProfile: true,
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ error: 'Failed to fetch profile' });
   }
 };

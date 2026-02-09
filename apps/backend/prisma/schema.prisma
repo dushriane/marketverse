@@ -19,12 +19,13 @@ enum Role {
 
 model User {
   id            String    @id @default(uuid())
-  email         String    @unique
+  email         String?   @unique
+  phone         String?   @unique
   passwordHash  String
   role          Role      @default(BUYER)
-  fullName      String?
-  walletAddress String?
+  fullName      String
   createdAt     DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   
   // Relations
   vendorProfile  VendorProfile?
@@ -32,6 +33,9 @@ model User {
   reservations   Reservation[]
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
+
+  @@index([email])
+  @@index([phone])
 }
 
 model VendorProfile {
