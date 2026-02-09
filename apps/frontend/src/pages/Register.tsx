@@ -66,18 +66,11 @@ export function Register() {
             {/* Email */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Email / Phone</label>
-              {/* Note: Schema calls for 'email' but user asked for phone/email. 
-                  Backend 'register' expects 'email' specifically in Prisma schema usually unique.
-                  Let's assume Email for registration for now as per schema or change schema.
-                  The user request said "Phone/Email Login".
-                  Wait, prisma schema has `email String @unique`.
-                  We should strictly use Email for registration based on current backend schema.
-               */}
               <input
                 {...register('email')}
-                type="email"
+                type="text"
                 className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="you@example.com"
+                placeholder="you@example.com or +250..."
               />
               {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
             </div>

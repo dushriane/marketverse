@@ -74,7 +74,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/explore" element={<MarketExplore />} />
+        <Route path="/explore" element={<PrivateRoute><Layout><MarketExplore /></Layout></PrivateRoute>} />
         
         <Route path="/profile" element={<PrivateRoute><Layout><Profile /></Layout></PrivateRoute>} />
         

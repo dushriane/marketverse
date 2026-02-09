@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text, Html } from '@react-three/drei';
+import { Text, Html, useGLTF } from '@react-three/drei';
 import { useMarketStore, MarketVendor } from '../../stores/marketStore';
 import * as THREE from 'three';
 
@@ -12,9 +12,19 @@ interface Stall3DProps {
 }
 
 export function Stall3D({ vendor, position, onClick, isSelected }: Stall3DProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<THREE.Group>(null);
   const { enterStall } = useMarketStore();
   const [hovered, setHovered] = useState(false);
+
+  // Load custom model if available. Using a generic stall model as default fallback or a specific one.
+  // Note: Ensure the file 'market_stall.glb' exists in public/models/
+  const { scene } = useGLTF('/models/market_stall.glb', undefined, (error) => {
+      // Fallback if model missing, we handle this by checking if scene is valid or catching error
+      console.warn("Model failed to load, using placeholder geometry.", error);
+  });
+  
+  // Clone scene so we can use it multiple times
+  const clonedScene = scene.clone();
 
   useFrame((state) => {
     if (meshRef.current) {
@@ -29,53 +39,49 @@ export function Stall3D({ vendor, position, onClick, isSelected }: Stall3DProps)
   });
 
   return (
-    <group position={position}>
-      {/* Platform/Table */}
-      <mesh
-        ref={meshRef}
+    <group 
+        ref={meshRef} 
+        position={position}
         onClick={(e) => { e.stopPropagation(); onClick(vendor.id); }}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
-        position={[0, 0.5, 0]}
-      >
-        <boxGeometry args={[2, 1, 2]} />
-        <meshStandardMaterial color={isSelected ? "#4f46e5" : hovered ? "#6366f1" : "orange"} />
-      </mesh>
-      
-      {/* Roof/Canopy */}
-      <mesh position={[0, 2, 0]}>
-        <coneGeometry args={[1.5, 1, 4]} />
-        <meshStandardMaterial color={isSelected ? "#4f46e5" : "#ef4444"} />
-      </mesh>
-      
-      {/* Supports */}
-      <mesh position={[0.9, 1, 0.9]}>
-        <cylinderGeometry args={[0.05, 0.05, 2]} />
-        <meshStandardMaterial color="#888" />
-      </mesh>
-      <mesh position={[-0.9, 1, 0.9]}>
-        <cylinderGeometry args={[0.05, 0.05, 2]} />
-        <meshStandardMaterial color="#888" />
-      </mesh>  
-      <mesh position={[0.9, 1, -0.9]}>
-        <cylinderGeometry args={[0.05, 0.05, 2]} />
-        <meshStandardMaterial color="#888" />
-      </mesh>  
-      <mesh position={[-0.9, 1, -0.9]}>
-        <cylinderGeometry args={[0.05, 0.05, 2]} />
-        <meshStandardMaterial color="#888" />
-      </mesh>
+    >
+      {/* 3D Model or Fallback */}
+      {clonedScene ? (
+          <primitive 
+            object={clonedScene} 
+            scale={0.5} 
+            position={[0, 0, 0]}
+          >
+             {isSelected && <meshStandardMaterial color="#4f46e5" wireframe />}
+          </primitive>
+      ) : (
+        // OLD FALLBACK GEOMETRY
+        <group>
+            <mesh position={[0, 0.5, 0]}>
+                <boxGeometry args={[2, 1, 2]} />
+                <meshStandardMaterial color={isSelected ? "#4f46e5" : hovered ? "#6366f1" : "orange"} />
+            </mesh>
+            <mesh position={[0, 2, 0]}>
+                <coneGeometry args={[1.5, 1, 4]} />
+                <meshStandardMaterial color={isSelected ? "#4f46e5" : "#ef4444"} />
+            </mesh>
+        </group>
+      )}
 
       {/* Floating Info Text */}
       <Text
         position={[0, 3, 0]}
         fontSize={0.4}
-        color="black"
+        color="white" // Changing to white for better visibility in dark scene
         anchorX="center"
         anchorY="middle"
+        outlineWidth={0.02}
+        outlineColor="#000000"
       >
         {vendor.storeName}
       </Text>
+
       
       {/* Category Labels */}
       <Text

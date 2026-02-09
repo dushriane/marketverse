@@ -72,5 +72,37 @@ export const aiService = {
     } catch (error) {
         return [`${category} Special`];
     }
+  },
+
+  generateMarketData: async (marketName: string, location: string) => {
+    if (!aiService.checkAvailability()) {
+        console.warn("AI unavailable, returning mock market data.");
+        // Fallback or Empty
+        return [];
+    }
+    
+    try {
+        const prompt = `
+        Generate a realistic list of 6 distinct vendors for ${marketName} in ${location}.
+        Return a strictly valid JSON array (no markdown code blocks, just the raw array).
+        Each object in the array should have fields:
+        - "storeName" (string)
+        - "description" (string, max 20 words)
+        - "ownerName" (string, local name)
+        - "category" (one of: Vegetables, Fruits, Crafts, Clothing, Electronics, Services, Other)
+        - "products" (array of 3 objects with "name", "description", "price" (number in RWF))
+        `;
+        
+        const result = await model.generateContent(prompt);
+        let text = result.response.text();
+        
+        // Clean markdown if present
+        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        
+        return JSON.parse(text);
+    } catch (error) {
+        console.error("Failed to generate market data:", error);
+        return [];
+    }
   }
 };
