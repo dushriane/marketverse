@@ -43,8 +43,8 @@ export const register = async (req: Request, res: Response) => {
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({
       data: {
-        email: email || null,
-        phone: phone || null,
+        email: email || undefined,
+        phone: phone || undefined,
         passwordHash,
         fullName,
         role,
