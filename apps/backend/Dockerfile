@@ -2,32 +2,36 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-#Install OpenSSL
-RUN apk update && \
-    apk add --no-cache openssl
+# Install OpenSSL
+RUN apk add --no-cache openssl
 
-# Copy root workspace config
-COPY package.json ./
+# Optimize Build Layer: Copy only dependency definitions first
+COPY package.json package-lock.json ./
 
-# For production, you'd likely use a multi-stage build and filter specific packages
+# Copy workspace package.json files
+COPY apps/backend/package.json ./apps/backend/
+COPY apps/frontend/package.json ./apps/frontend/
+COPY packages/types/package.json ./packages/types/
+COPY packages/config/package.json ./packages/config/
+
+# Install dependencies (utilizing cache if package.jsons haven't changed)
+RUN npm ci
+
+# Copy source code
 COPY packages ./packages
 COPY apps/backend ./apps/backend
-COPY apps/backend/prisma ./apps/backend/prisma
 
-# Install dependencies
-RUN npm install
-
-# Build shared packages
-RUN npm run build -w packages/types
-
-# This allows the 'npm run build' step to succeed
+# Generate Prisma Client
 RUN npx prisma generate --schema=apps/backend/prisma/schema.prisma
 
-# Build backend
+# Build Shared Packages & Backend
+RUN npm run build -w packages/types
 RUN npm run build -w apps/backend
 
-# Switch to backend directory
+# Set working directory to backend
 WORKDIR /app/apps/backend
+
+CMD ["npm", "start"]
 
 EXPOSE 3000
 

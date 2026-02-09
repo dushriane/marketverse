@@ -24,6 +24,7 @@
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^2.2.0",
     "three": "^0.182.0",
+    "three-mesh-bvh": "0.8.0",
     "zod": "^3.22.4",
     "zustand": "^4.5.0"
   },
