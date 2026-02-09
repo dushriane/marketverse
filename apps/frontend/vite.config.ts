@@ -6,16 +6,16 @@ import path from 'path'
 export default defineConfig({
   plugins: [react() as any],
   server: {
-    port: 3000, // Changed from 5175 to 3000 as per user request
+    port: 5175, 
     host: true,
     proxy: {
         '/api': {
-          target: 'http://localhost:5000',
+          target: 'http://localhost:3000',
           changeOrigin: true,
           secure: false,
         },
         '/socket.io': {
-            target: 'http://localhost:5000',
+            target: 'http://localhost:3000',
             ws: true,
         }
     }
