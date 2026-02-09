@@ -13,7 +13,9 @@ const categories = Object.values(ProductCategory.enum);
 export function ProductForm() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const vendor = useAuthStore(state => state.vendor);
+  const { user } = useAuthStore();
+  // Ensure we consistently use user.id. We cast to any if the type definition is lagging behind the backend data
+  const vendorId = (user as any)?.id; 
   const { products, createProduct, updateProduct } = useProductStore();
   const { suggestedCategories, suggestCategories, isGenerating: isAiGenerating } = useAIStore();
   
@@ -27,10 +29,10 @@ export function ProductForm() {
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<Product>({
     resolver: zodResolver(ProductSchema),
     defaultValues: {
-      vendorId: vendor?.id,
+      vendorId: vendorId, // Use the derived vendorId
       isNegotiable: false,
       status: 'available',
-      price: 0 // Initialize price
+      price: 0
     }
   });
 
@@ -38,10 +40,10 @@ export function ProductForm() {
     if (isEdit && existingProduct) {
       reset(existingProduct);
       setPreviewImage(existingProduct.imageUrl || null);
-    } else if (vendor?.id) {
-       setValue('vendorId', vendor.id); // Ensure vendorId is set for new products
+    } else if (vendorId) {
+       setValue('vendorId', vendorId);
     }
-  }, [isEdit, existingProduct, reset, vendor, setValue]);
+  }, [isEdit, existingProduct, reset, vendorId, setValue]);
 
   const onFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'imageUrl' | 'meshUrl') => {
     const file = e.target.files?.[0];
@@ -66,17 +68,14 @@ export function ProductForm() {
   };
 
   const generateDescription = async () => {
-    // const imageUrl = watch('imageUrl'); // Image based not yet fully supported by backend logic for generation 
     const productName = watch('name');
     const category = watch('category');
     
-    // We allow generation if Name is present, even without Image
     if (!productName) return alert('Please enter a Product Name first');
 
     setGenerating(true);
     try {
       const res = await api.post('/ai/generate-description', {
-        // imageBase64: imageUrl, 
         productName,
         category
       });
@@ -98,7 +97,6 @@ export function ProductForm() {
   const onSubmit = async (data: Product) => {
     try {
       if (isEdit) {
-         // Ensure we pass the ID for updates
         await updateProduct({ ...data, id });
       } else {
         await createProduct(data);
@@ -110,14 +108,14 @@ export function ProductForm() {
     }
   };
 
-  if (!vendor) return <div>Access Denied</div>;
+  if (!vendorId) return <div>Access Denied: No Vendor ID found.</div>;
 
   return (
     <div className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
       <h1 className="text-2xl font-bold mb-6">{isEdit ? 'Edit Product' : 'Add New Product'}</h1>
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 shadow rounded-lg">
-        
+        {/* ...existing code... (rest of the render function remains the same) */}
         {/* Image Upload */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Product Photo</label>

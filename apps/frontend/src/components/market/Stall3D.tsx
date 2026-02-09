@@ -18,13 +18,18 @@ export function Stall3D({ vendor, position, onClick, isSelected }: Stall3DProps)
 
   // Load custom model if available. Using a generic stall model as default fallback or a specific one.
   // Note: Ensure the file 'market_stall.glb' exists in public/models/
-  const { scene } = useGLTF('/models/market_stall.glb', undefined, (error) => {
-      // Fallback if model missing, we handle this by checking if scene is valid or catching error
-      console.warn("Model failed to load, using placeholder geometry.", error);
-  });
+  // const { scene } = useGLTF('/models/market_stall.glb', undefined, (error) => {
+  //     // Fallback if model missing, we handle this by checking if scene is valid or catching error
+  //     console.warn("Model failed to load, using placeholder geometry.", error);
+  // });
+
+  const { scene } = useGLTF('/models/market_stall.glb', true); 
   
   // Clone scene so we can use it multiple times
   const clonedScene = scene.clone();
+
+  // Clone the scene so we can reuse the same asset for multiple stalls
+  //const clone = useMemo(() => scene.clone(), [scene]);
 
   useFrame((state) => {
     if (meshRef.current) {

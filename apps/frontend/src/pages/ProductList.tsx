@@ -4,16 +4,18 @@ import { useAuthStore } from '../stores/authStore';
 import { useProductStore } from '../stores/productStore';
 
 export function ProductList() {
-  const vendor = useAuthStore(state => state.vendor);
+  const { user } = useAuthStore();
+  // Safe access using optional chaining and any cast if needed temporarily
+  const vendorId = (user as any)?.id;
   const { products, isLoading, fetchProducts, deleteProduct, bulkUpdateStatus } = useProductStore();
 
   useEffect(() => {
-    if (vendor?.id) {
-      fetchProducts(vendor.id);
+    if (vendorId) {
+      fetchProducts(vendorId);
     }
-  }, [vendor, fetchProducts]);
+  }, [vendorId, fetchProducts]);
 
-  if (!vendor) return <div>Access Denied</div>;
+  if (!vendorId) return <div>Access Denied</div>;
 
   return (
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -33,13 +35,13 @@ export function ProductList() {
         <h2 className="text-lg font-medium mb-3">Bulk Actions</h2>
         <div className="flex space-x-2">
           <button
-            onClick={() => bulkUpdateStatus(vendor.id!, 'available')}
+            onClick={() => bulkUpdateStatus(vendorId, 'available')}
             className="px-3 py-1 bg-green-100 text-green-800 rounded text-sm hover:bg-green-200"
           >
             Mark All Available
           </button>
           <button
-            onClick={() => bulkUpdateStatus(vendor.id!, 'out_of_stock')}
+            onClick={() => bulkUpdateStatus(vendorId, 'out_of_stock')}
             className="px-3 py-1 bg-gray-100 text-gray-800 rounded text-sm hover:bg-gray-200"
           >
             Mark All Out of Stock
@@ -84,7 +86,7 @@ export function ProductList() {
                   <div className="space-x-2">
                     <Link to={`/products/${product.id}/edit`} className="text-indigo-600 hover:text-indigo-900 text-sm">Edit</Link>
                     <button 
-                      onClick={() => { if(confirm('Delete product?')) deleteProduct(product.id!, vendor.id!); }}
+                      onClick={() => { if(confirm('Delete product?')) deleteProduct(product.id!, vendorId); }}
                       className="text-red-600 hover:text-red-900 text-sm"
                     >
                       Delete

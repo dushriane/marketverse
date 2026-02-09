@@ -3,9 +3,10 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Initialize Gemini
-// User requested "Gemini 3 Preview". We map this to the latest available model.
+// Using 'gemini-1.5-flash' for high availability. 
+// Can be swapped to 'gemini-2.0-flash-exp' if available for Gemini 3 capabilities.
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export const aiService = {
   checkAvailability: () => {
