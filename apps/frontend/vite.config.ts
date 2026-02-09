@@ -1,28 +1,26 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
-// Cast to any to avoid type mismatch issues in monorepo environment
 export default defineConfig({
-  plugins: [react() as any],
-  server: {
-    port: 5175, 
-    host: true,
-    proxy: {
-        '/api': {
-          target: 'http://localhost:5000',
-          changeOrigin: true,
-          secure: false,
-        },
-        '/socket.io': {
-            target: 'http://localhost:5000',
-            ws: true,
-        }
-    }
-  },
+  plugins: [react()],
   resolve: {
     alias: {
-      '@marketverse/types': path.resolve(__dirname, '../../packages/types/src/index.ts'),
+      '@': path.resolve(__dirname, './src'),
     },
   },
-})
+  server: {
+    port: 5175,
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:5000', // Changed from localhost to 127.0.0.1 to avoid IPv6 issues
+        changeOrigin: true,
+        secure: false,
+      },
+      '/socket.io': {
+        target: 'http://127.0.0.1:5000', // Changed from localhost to 127.0.0.1
+        ws: true,
+      },
+    },
+  },
+});

@@ -86,7 +86,7 @@ export const login = async (req: Request, res: Response) => {
   try {
     // --- MOCK LOGIN START ---
     // Bypass actual authentication and return mock data based on requested role
-    const { role } = req.body; // Expecting { role: 'CUSTOMER' | 'VENDOR' }
+    const role = req.body ? req.body.role : undefined; // Safer access
 
     if (role === 'VENDOR') {
         return res.json({
@@ -139,12 +139,17 @@ export const login = async (req: Request, res: Response) => {
 
     res.json({ user: userWithoutPassword, token });
     */
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    res.status(500).json({ error: 'Login failed' });
+    // Return detailed error for debugging
+    res.status(500).json({ 
+        error: 'Login failed',
+        message: error?.message,
+        stack: error?.stack 
+    });
   }
 };
 
