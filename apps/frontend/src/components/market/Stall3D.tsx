@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text, Html, useGLTF } from '@react-three/drei';
 import { useMarketStore, MarketVendor } from '../../stores/marketStore';
@@ -23,13 +23,13 @@ export function Stall3D({ vendor, position, onClick, isSelected }: Stall3DProps)
   //     console.warn("Model failed to load, using placeholder geometry.", error);
   // });
 
-  const { scene } = useGLTF('/models/market_stall.glb', true); 
+  const { scene } = useGLTF('/apps/frontend/public/models/Meshy_AI_Shoe_Display_Exhibit_0209084247_texture.glb', true); 
   
   // Clone scene so we can use it multiple times
-  const clonedScene = scene.clone();
+  //const clonedScene = scene.clone();
 
   // Clone the scene so we can reuse the same asset for multiple stalls
-  //const clone = useMemo(() => scene.clone(), [scene]);
+  const clonedScene = useMemo(() => scene.clone(), [scene]);
 
   useFrame((state) => {
     if (meshRef.current) {
