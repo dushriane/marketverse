@@ -37,15 +37,19 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
         
         res.status(201).json(message);
     } catch (e: any) {
+        console.error("Error sending message:", e);
         res.status(500).json({ error: e.message });
     }
-}
+};
 
 export const getMessages = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.userId;
-        // Get conversation with specific user or all?
-        // Let's get list of unique conversations or just all messages
+        
+        if (!userId) {
+             return res.status(401).json({ error: 'Unauthorized' });
+        }
+
         const messages = await prisma.message.findMany({
             where: {
                 OR: [
@@ -58,6 +62,7 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
         });
         res.json(messages);
     } catch (e: any) {
+        console.error("Error getting messages:", e);
         res.status(500).json({ error: e.message });
     }
-}
+};
