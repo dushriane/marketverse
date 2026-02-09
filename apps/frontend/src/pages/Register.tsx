@@ -1,10 +1,22 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { RegisterSchema, RegisterRequest } from '@marketverse/types';
+import { z } from 'zod';
 import { api } from '../lib/api';
 //import { useAuthStore } from '../stores/authStore';
 import { useNavigate, Link } from 'react-router-dom';
+
+const RegisterSchema = z.object({
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  password: z.string().min(6),
+  fullName: z.string().min(1),
+  role: z.enum(['BUYER', 'VENDOR']).default('BUYER'),
+}).refine((data) => data.email || data.phone, {
+  message: "Either email or phone must be provided",
+});
+
+type RegisterRequest = z.infer<typeof RegisterSchema>;
 
 export function Register() {
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterRequest>({
