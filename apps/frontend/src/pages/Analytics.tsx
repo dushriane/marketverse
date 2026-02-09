@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { useAIStore } from '../stores/aiStore';
-import { ProductCategory } from '@marketverse/types';
 import { api } from '../lib/api';
+
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
   LineChart, Line
 } from 'recharts';
+
+const ProductCategory = {
+  ELECTRONICS: 'Electronics',
+  CLOTHING: 'Clothing',
+  HOME: 'Home',
+  ART: 'Art',
+  COLLECTIBLES: 'Collectibles',
+  OTHER: 'Other'
+};
 
 interface AnalyticsData {
     products: number;
@@ -153,7 +162,7 @@ export function Analytics() {
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             >
-                {Object.values(ProductCategory.enum).map(c => (
+                {Object.values(ProductCategory).map((c: string) => (
                     <option key={c} value={c}>{c}</option>
                 ))}
             </select>

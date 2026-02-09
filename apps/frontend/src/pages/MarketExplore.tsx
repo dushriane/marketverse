@@ -2,7 +2,15 @@ import { useEffect } from 'react';
 import { useMarketStore } from '../stores/marketStore';
 import { Market3D } from '../components/market/Market3D';
 import { Market2D } from '../components/market/Market2D';
-import { ProductCategory } from '@marketverse/types';
+
+const ProductCategory = {
+  ELECTRONICS: 'Electronics',
+  CLOTHING: 'Clothing',
+  HOME: 'Home',
+  ART: 'Art',
+  COLLECTIBLES: 'Collectibles',
+  OTHER: 'Other'
+};
 
 export function MarketExplore() {
   const { 
@@ -58,7 +66,7 @@ export function MarketExplore() {
                 className="border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500"
              >
                 <option value="All">All Categories</option>
-                {Object.values(ProductCategory.enum).map(c => (
+                {Object.values(ProductCategory).map((c: string) => (
                     <option key={c} value={c}>{c}</option>
                 ))}
              </select>

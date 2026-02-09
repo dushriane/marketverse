@@ -1,9 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { VendorSchema, Vendor } from '@marketverse/types';
+import { z } from 'zod';
 import { api } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
+
+const VendorSchema = z.object({
+  storeName: z.string().min(1, 'Store name is required'),
+  description: z.string().optional(),
+  marketLocation: z.string().optional(),
+  profileImage: z.string().optional(),
+  bannerImage: z.string().optional(),
+});
+
+type Vendor = z.infer<typeof VendorSchema>;
+
 import { useAIStore } from '../stores/aiStore';
 import { Link } from 'react-router-dom';
 import { TopBuyersSidebar } from '../components/vendor/TopBuyersSidebar';

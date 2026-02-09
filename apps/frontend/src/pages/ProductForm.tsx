@@ -1,14 +1,30 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ProductSchema, Product, ProductCategory } from '@marketverse/types';
+import { z } from 'zod';
 import { useNavigate, useParams } from 'react-router-dom';
+
+const ProductCategory = z.enum([
+  'Electronics', 'Clothing', 'Home', 'Art', 'Collectibles', 'Other'
+]);
+
+const ProductSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().min(1, 'Description is required'),
+  price: z.number().min(0, 'Price must be positive'),
+  stock: z.number().int().min(0, 'Stock must be non-negative'),
+  category: ProductCategory,
+  tags: z.array(z.string()).optional(),
+  images: z.array(z.string()).optional(),
+});
+
+type Product = z.infer<typeof ProductSchema> & { id?: string };
 import { useAuthStore } from '../stores/authStore';
 import { useProductStore } from '../stores/productStore';
 import { useAIStore } from '../stores/aiStore';
 import { api } from '../lib/api';
 
-const categories = Object.values(ProductCategory.enum);
+const categories = ProductCategory.options;
 
 export function ProductForm() {
   const { id } = useParams();
